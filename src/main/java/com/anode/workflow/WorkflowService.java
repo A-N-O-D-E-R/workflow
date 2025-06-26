@@ -1,12 +1,12 @@
 package com.anode.workflow;
 
+import com.anode.tool.thread.BlockOnOfferQueue;
 import com.anode.workflow.exceptions.WorkflowRuntimeException;
 import com.anode.workflow.service.EventHandler;
 import com.anode.workflow.service.SlaQueueManager;
 import com.anode.workflow.service.WorkflowComponantFactory;
 import com.anode.workflow.service.runtime.RejectedItemHandler;
 import com.anode.workflow.service.runtime.RuntimeService;
-import com.anode.workflow.thread.BlockOnOfferQueue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
