@@ -1,0 +1,36 @@
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
+    <persistence-unit name="WorkflowUnit">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>com.altar.workflow.entities.sla.Milestone</class>
+        <class>com.altar.workflow.entities.sla.FutureMilestones</class>
+        <class>com.altar.workflow.entities.tickets.Ticket</class>
+        <class>com.altar.workflow.entities.steps.Branch</class>
+        <class>com.altar.workflow.entities.steps.Persist</class>
+        <class>com.altar.workflow.entities.steps.Pause</class>
+        <class>com.altar.workflow.entities.steps.Task</class>
+        <class>com.altar.workflow.entities.steps.Route</class>
+        <class>com.altar.workflow.entities.steps.Join</class>
+        <class>com.altar.workflow.entities.steps.Step</class>
+        <class>com.altar.workflow.entities.workflows.WorkflowVariable</class>
+        <class>com.altar.workflow.entities.workflows.WorkflowInfo</class>
+        <class>com.altar.workflow.entities.workflows.paths.ExecPath</class>
+        <class>com.altar.workflow.entities.workflows.WorkflowDefinition</class>
+        <class>com.altar.workflow.service.ErrorHandler</class>
+        <properties>
+            <!-- Database connection properties -->
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/test"/>
+            <property name="jakarta.persistence.jdbc.user" value="test"/>
+            <property name="jakarta.persistence.jdbc.password" value="test"/>
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+
+            <!-- Hibernate properties -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+
+            <!-- Schema generation properties -->
+            <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
+            <property name="jakarta.persistence.schema-generation.scripts.action" value="create"/>
+            <property name="jakarta.persistence.schema-generation.scripts.create-target" value="workflow/src/test/resources/database/database_generation.sql"/>
+        </properties>
+    </persistence-unit>
+</persistence>

@@ -1,0 +1,112 @@
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, successfully created case
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_START, comp name -> , work basket ->
+Received event -> ON_PROCESS_START, isPendAtSameStep -> false
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> start, component -> start_comp, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step2, component -> comp2, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step3, component -> comp3, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, pending at task -> step3, component -> comp3, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> comp3, work basket -> comp3_wb
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> false
+Pend workbasket -> comp3_wb
+
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> comp3, work basket -> comp3_wb
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step4, component -> comp4, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing singular routing rule -> route1, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step6, component -> comp6, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step7, component -> comp7, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing singular routing rule -> route2, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step8, component -> comp8, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step9, component -> comp9, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step10, component -> comp10, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step11, component -> comp11, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, pending at task -> step11, component -> comp11, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> comp11, work basket -> comp11_wb
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> false
+Pend workbasket -> comp11_wb
+
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> comp11, work basket -> comp11_wb
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step11, component -> comp11, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, pending at task -> step11, component -> comp11, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> comp11, work basket -> comp11_err1
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> true
+Pend workbasket -> comp11_err1
+
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> comp11, work basket -> comp11_err1
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step11, component -> comp11, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, pending at task -> step11, component -> comp11, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> comp11, work basket -> comp11_err2
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> true
+Pend workbasket -> comp11_err2
+
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> comp11, work basket -> comp11_err2
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step11, component -> comp11, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step12, component -> comp12, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step13, component -> comp13, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, pending at task -> step13, component -> comp13, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> comp13, work basket -> comp13_err3
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> false
+Pend workbasket -> comp13_err3
+
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> comp13, work basket -> comp13_err3
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step13, component -> comp13, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, pending at task -> step13, component -> comp13, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> comp13, work basket -> comp13_err3
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> true
+Pend workbasket -> comp13_err3
+
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> comp13, work basket -> comp13_err3
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step13, component -> comp13, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, pending at task -> step13, component -> comp13, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> comp13, work basket -> comp13_err3
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> true
+Pend workbasket -> comp13_err3
+
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> comp13, work basket -> comp13_err3
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step13, component -> comp13, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step14, component -> comp14, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, pending at task -> step14, component -> comp14, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> comp14, work basket -> comp14_wb
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> false
+Pend workbasket -> comp14_wb
+
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> comp14, work basket -> comp14_wb
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step14, component -> comp14, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step15, component -> comp15, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing singular routing rule -> route3, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step17, component -> comp17, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step18, component -> comp18, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step19, component -> comp19, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step20, component -> comp20, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step21, component -> comp21, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing singular routing rule -> route4, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing singular routing rule -> route5, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step22, component -> comp22, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing pause task -> step23_a, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> pause, work basket -> workflow_pause
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> false
+Pend workbasket -> workflow_pause
+
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> pause, work basket -> workflow_pause
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step23, component -> comp23, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing singular routing rule -> route6, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step24, component -> comp24, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step25, component -> comp25, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step26, component -> comp26, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step27, component -> comp27, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step28, component -> comp28, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing singular routing rule -> route7, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step29, component -> comp29, execution path -> .
+[com.altar.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step30, component -> comp30, execution path -> .
+[com.altar.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_COMPLETE, comp name -> , work basket ->
+Received event -> ON_PROCESS_COMPLETE, isPendAtSameStep -> false
+
+Exception -> Cannot resume a case that has already completed. Case id -> 1
