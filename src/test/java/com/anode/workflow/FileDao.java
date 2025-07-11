@@ -3,6 +3,8 @@ package com.anode.workflow;
 import com.anode.tool.StringUtils;
 import com.anode.tool.document.Document;
 import com.anode.tool.document.JDocument;
+import com.anode.tool.service.CommonService;
+import com.anode.tool.service.IdFactory;
 import com.anode.workflow.service.runtime.RuntimeService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,11 +18,12 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FileDao implements CommonDao {
+public class FileDao implements CommonService {
 
     private String filePath = null;
     private Map<String, Long> counters = new HashMap<>();
@@ -171,5 +174,17 @@ public class FileDao implements CommonDao {
     public Object getLocked(Class objectClass, Serializable id) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getLocked'");
+    }
+
+    @Override
+    public Map<Serializable, Serializable> makeClone(Object object, IdFactory idFactory) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'makeClone'");
+    }
+
+    @Override
+    public Serializable getMinimalId(Comparator<Serializable> comparator) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getMinimalId'");
     }
 }

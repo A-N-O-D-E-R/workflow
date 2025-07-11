@@ -1,7 +1,7 @@
 package com.anode.workflow.service.runtime;
 
 import com.anode.tool.StringUtils;
-import com.anode.workflow.CommonDao;
+import com.anode.tool.service.CommonService;
 import com.anode.workflow.entities.events.EventType;
 import com.anode.workflow.entities.sla.Milestone;
 import com.anode.workflow.entities.sla.Milestone.Setup;
@@ -31,7 +31,7 @@ public class RuntimeService {
     public static final String JOURNEY_SLA = "journey_sla";
 
     // variables are protected so that they can be accessed by classes in the same package
-    protected CommonDao dao = null;
+    protected CommonService dao = null;
     protected WorkflowComponantFactory factory = null;
     protected EventHandler eventHandler = null;
     protected WorkflowDefinition workflowDefinition = null;
@@ -42,7 +42,7 @@ public class RuntimeService {
     private List<Milestone> sla = null;
 
     public RuntimeService(
-            CommonDao dao,
+            CommonService dao,
             WorkflowComponantFactory factory,
             EventHandler eventHandler,
             SlaQueueManager slaQm) {

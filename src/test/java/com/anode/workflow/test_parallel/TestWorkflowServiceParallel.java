@@ -3,7 +3,7 @@ package com.anode.workflow.test_parallel;
 import com.anode.tool.StringUtils;
 import com.anode.tool.document.Document;
 import com.anode.tool.document.JDocument;
-import com.anode.workflow.CommonDao;
+import com.anode.tool.service.CommonService;
 import com.anode.workflow.MemoryDao;
 import com.anode.workflow.RouteResponseFactory;
 import com.anode.workflow.StepResponseFactory;
@@ -62,7 +62,7 @@ public class TestWorkflowServiceParallel {
     }
 
     private static void init(
-            CommonDao dao,
+            CommonService dao,
             WorkflowComponantFactory factory,
             EventHandler handler,
             SlaQueueManager sqm) {

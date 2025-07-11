@@ -29,7 +29,7 @@ public class WorkflowServiceSample {
         WorkflowService.instance().setWriteProcessInfoAfterEachStep(true);
 
         // wire up the workflow_service runtime service
-        SampleCommonDao dao = new SampleCommonDao(DIR_PATH);
+        SampleCommonService dao = new SampleCommonService(DIR_PATH);
         SampleComponentFactory factory = new SampleComponentFactory();
         SampleEventHandler handler = new SampleEventHandler();
         RuntimeService rts =

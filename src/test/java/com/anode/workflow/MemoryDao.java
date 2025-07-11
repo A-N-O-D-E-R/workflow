@@ -1,14 +1,17 @@
 package com.anode.workflow;
 
+import com.anode.tool.service.CommonService;
+import com.anode.tool.service.IdFactory;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class MemoryDao implements CommonDao {
+public class MemoryDao implements CommonService {
 
     private Map<Serializable, Long> counters = new HashMap<>();
     private Map<Serializable, Boolean> lockedObjects = new HashMap<>();
@@ -138,5 +141,17 @@ public class MemoryDao implements CommonDao {
     public void releaseLock(Serializable id) {
         // Release the lock on the object
         lockedObjects.put(id, false);
+    }
+
+    @Override
+    public Map<Serializable, Serializable> makeClone(Object object, IdFactory idFactory) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'makeClone'");
+    }
+
+    @Override
+    public Serializable getMinimalId(Comparator<Serializable> comparator) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getMinimalId'");
     }
 }

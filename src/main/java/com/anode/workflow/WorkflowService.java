@@ -1,5 +1,6 @@
 package com.anode.workflow;
 
+import com.anode.tool.service.CommonService;
 import com.anode.tool.thread.BlockOnOfferQueue;
 import com.anode.workflow.exceptions.WorkflowRuntimeException;
 import com.anode.workflow.service.EventHandler;
@@ -42,7 +43,7 @@ public class WorkflowService {
      * @return
      */
     public RuntimeService getRunTimeService(
-            CommonDao dao,
+            CommonService dao,
             WorkflowComponantFactory factory,
             EventHandler listener,
             SlaQueueManager slaQm) {
@@ -58,7 +59,7 @@ public class WorkflowService {
      * @return
      */
     public WorkflowManagerServices getWorkManagementService(
-            CommonDao dao, WorkManager workManager, SlaQueueManager slaQm) {
+            CommonService dao, WorkManager workManager, SlaQueueManager slaQm) {
         return new WorkflowManagerServices(dao, workManager, slaQm);
     }
 

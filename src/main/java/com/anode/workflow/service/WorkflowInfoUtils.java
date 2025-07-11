@@ -1,7 +1,7 @@
 package com.anode.workflow.service;
 
 import com.anode.tool.StringUtils;
-import com.anode.workflow.CommonDao;
+import com.anode.tool.service.CommonService;
 import com.anode.workflow.entities.steps.Step;
 import com.anode.workflow.entities.steps.Step.StepType;
 import com.anode.workflow.entities.steps.responses.StepResponseType;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WorkflowInfoUtils {
     public static WorkflowInfo getWorkflowInfo(
-            CommonDao dao, String caseId, WorkflowDefinition pd) {
+            CommonService dao, String caseId, WorkflowDefinition pd) {
         WorkflowInfo pi = new WorkflowInfo(caseId, pd);
 
         WorkflowInfo newWorkflowInfo =

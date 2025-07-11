@@ -905,7 +905,7 @@ public class ExecThreadTask implements Runnable {
                 }
             }
 
-            if (isComplete == true) {
+            if (isComplete) {
                 // we need to become parent and continue processing
                 ExecPath parentEp = workflowInfo.getExecPath(execPath.getParentExecPathName());
                 if (parentEp.getStatus() == ExecPathStatus.COMPLETED) {

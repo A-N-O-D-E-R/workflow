@@ -3,7 +3,8 @@ package com.anode.workflow.sample;
 import com.anode.tool.StringUtils;
 import com.anode.tool.document.Document;
 import com.anode.tool.document.JDocument;
-import com.anode.workflow.CommonDao;
+import com.anode.tool.service.CommonService;
+import com.anode.tool.service.IdFactory;
 import com.anode.workflow.entities.sla.Milestone;
 import com.anode.workflow.entities.workflows.WorkflowDefinition;
 import com.anode.workflow.entities.workflows.WorkflowInfo;
@@ -25,16 +26,17 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SampleCommonDao implements CommonDao {
+public class SampleCommonService implements CommonService {
 
     private String filePath = null;
     private Map<Serializable, Long> counters = new HashMap<>();
 
-    public SampleCommonDao(String filePath) {
+    public SampleCommonService(String filePath) {
         this.filePath = filePath;
     }
 
@@ -188,5 +190,17 @@ public class SampleCommonDao implements CommonDao {
     public <T> T getLocked(Class<T> objectClass, Serializable id) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getLocked'");
+    }
+
+    @Override
+    public Map<Serializable, Serializable> makeClone(Object object, IdFactory idFactory) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'makeClone'");
+    }
+
+    @Override
+    public Serializable getMinimalId(Comparator<Serializable> comparator) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getMinimalId'");
     }
 }

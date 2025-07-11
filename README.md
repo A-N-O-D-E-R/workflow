@@ -274,7 +274,7 @@ WorkflowService.instance().setWriteProcessInfoAfterEachStep(true);
 ###### Wire up objects and get runtime service
 
 ```java
-SampleCommonDao dao = new SampleWorkflowDao(DIR_PATH);
+SampleCommonService dao = new SampleWorkflowDao(DIR_PATH);
 SampleComponentFactory factory = new SampleComponentFactory();
 SampleEventHandler handler = new SampleEventHandler();
 Rts rts = WorkflowService.instance().getRunTimeService(dao, factory, handler, null);
@@ -713,11 +713,11 @@ RuntimeService rts = Workflow.getRunTimeService(dao, factory, handler, SlaQueueM
 The application is expected to provide the following objects
 to the run time service for Workflow to use:
 
-`CommonDao dao` specifies an object that implements the `CommonDao` interface as below.
+`CommonService dao` specifies an object that implements the `CommonService` interface as below.
 This object will be used to persist the state of the process.
 
 ```java
-public interface CommonDao {
+public interface CommonService {
   public void write(String key, Document d);
   public Document read(String key);
   public long incrCounter(String key);
@@ -1596,7 +1596,7 @@ Applications can call the following method to get an instance of the work manage
   Wms wms = Rts.getWorkManagementService(dao, wm, slaQm);
 ```
 
-`dao` specifies an instance of an object that implements the CommonDao interface (already explained)
+`dao` specifies an instance of an object that implements the CommonService interface (already explained)
 `wm` specifies an instance of an object that implements the `WorkManager` interface. Passing null is allowed
 `slaQm` specifies an instance of an object that implements the `SlaQueueManager`
 interface (already explained). Passing null is allowed

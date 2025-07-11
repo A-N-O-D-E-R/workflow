@@ -1,5 +1,6 @@
 package com.anode.workflow;
 
+import com.anode.tool.service.CommonService;
 import com.anode.workflow.entities.sla.Milestone;
 import com.anode.workflow.entities.sla.Milestone.Setup;
 import com.anode.workflow.entities.workflows.WorkflowContext;
@@ -17,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WorkflowManagerServices {
-    protected CommonDao dao = null;
+    protected CommonService dao = null;
     protected WorkManager workManager = null;
     protected SlaQueueManager slaQm = null;
     protected WorkflowInfo workflowInfo = null;
@@ -25,7 +26,7 @@ public class WorkflowManagerServices {
     protected List<Milestone> sla = null;
 
     protected WorkflowManagerServices(
-            CommonDao dao, WorkManager workManager, SlaQueueManager slaQm) {
+            CommonService dao, WorkManager workManager, SlaQueueManager slaQm) {
         this.dao = dao;
         this.workManager = workManager;
         this.slaQm = slaQm;
