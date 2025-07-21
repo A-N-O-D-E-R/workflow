@@ -10,7 +10,7 @@
 Workflow is available as a jar file in Maven central with the following Maven coordinates:
 
 ````pom
-<groupId>com.altar</groupId>
+<groupId>com.anode</groupId>
 <artifactId>workflow</artifactId>
 <version>0.0.1-SNAPSHOT</version>
 ````
@@ -175,7 +175,7 @@ is_complete as false and a timestamp which is x units exceeded
 
 #### Getting started in 5 minutes
 
-Please refer to the packages `com.altar.workflow.sample` and `/resources/workflow/sample` in the test
+Please refer to the packages `com.anode.workflow.sample` and `/resources/workflow/sample` in the test
 folder. All Java class files and resources described below can be found there. You can also run the sample by running
 the file `WorkflowServiceSample.java`.
 
@@ -192,7 +192,7 @@ are the same as the contents of the process flow as defined in the next section 
 
 ##### Step 2: Create an object to persist Workflow data
 
-Please refer to the file `com.altar.workflow.sample.SampleDao.java` in the test folder.
+Please refer to the file `com.anode.workflow.sample.SampleDao.java` in the test folder.
 
 This object is used by Workflow to read from / to the data store. The data store may be an RDBMS, a NoSQL or for simple
 testing even a file system. In our sample, this object reads and writes from / to a file system.
@@ -204,7 +204,7 @@ in step 7.
 
 ##### Step 3: Create a sample step
 
-Please refer to the file `com.altar.workflow.sample.SampleStep.java` in the test folder.
+Please refer to the file `com.anode.workflow.sample.SampleStep.java` in the test folder.
 
 This is the object returned by a component factory and represents a step to be executed. This object implements
 the `InvokableTask` interface.
@@ -217,7 +217,7 @@ applications may have one class for one step.
 
 ##### Step 4: Create a sample route
 
-Please refer to the file `com.altar.workflow.sample.SampleRoute.java` in the test folder.
+Please refer to the file `com.anode.workflow.sample.SampleRoute.java` in the test folder.
 
 This is the object returned by a component factory and represents a route to be executed. This object implements
 the `InvokableRoute` interface.
@@ -230,7 +230,7 @@ reality, applications may have one class per route.
 
 ##### Step 5: Create a sample component factory
 
-Please refer to the file `com.altar.workflow.sample.SampleComponentFactory.java` in the test folder.
+Please refer to the file `com.anode.workflow.sample.SampleComponentFactory.java` in the test folder.
 
 This is the object which is invoked by Workflow whenever it wants to execute a step or a route. Workflow tells this object
 what type of entity is being run e.g. a step or a route (via the process context variable). In return, it expects to be
@@ -242,7 +242,7 @@ This is Workflow's way of saying - "Give me a factory which I can call to get a 
 
 ##### Step 6: Create a sample event handler
 
-Please refer to the file `com.altar.workflow.sample.SampleEventHandler.java` in the test folder.
+Please refer to the file `com.anode.workflow.sample.SampleEventHandler.java` in the test folder.
 
 This is the object to which Workflow delivers the case lifecycle events like ON_PROCESS_START etc. This object implements
 the `EventHandler` interface.
@@ -254,7 +254,7 @@ This is Workflow's way of saying - "Give me an object to which I can deliver cas
 ***When you run this program, the first thing it does is delete all files in the directory specified. Hence please take
 care to not point it to a directory where you may have content.***
 
-Please refer to the file `com.altar.workflow.sample.WorkflowServiceSample.java` in the test folder.
+Please refer to the file `com.anode.workflow.sample.WorkflowServiceSample.java` in the test folder.
 
 Please note the following:
 
@@ -305,7 +305,7 @@ You can see the logs in the console which will tell you of the progress. You may
 message shown below.
 
 ```log
-[com.altar.workflow.sample.WorkflowServiceSample] ERROR:Exception -> Cannot resume a case that has already completed. Case id -> WhateverCase
+[com.anode.workflow.sample.WorkflowServiceSample] ERROR:Exception -> Cannot resume a case that has already completed. Case id -> WhateverCase
 ```
 
 ##### Step 8: Experiment a bit
@@ -1155,21 +1155,21 @@ Below are the audit log documents created (assuming that we are persisting to th
 Below is an example of console logging for the above flow:
 
 ```text
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, successfully created case
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, successfully created case
 Received event -> ON_PROCESS_START
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> start, component -> start, execution path -> .
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing parallel routing rule -> route_1, execution path -> .
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_2, component -> step_2, execution path -> .route_1.1.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_4, component -> step_4, execution path -> .route_1.2.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_6, component -> step_6, execution path -> .route_1.3.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_3, component -> step_3, execution path -> .route_1.1.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_7, component -> step_7, execution path -> .route_1.3.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_5, component -> step_5, execution path -> .route_1.2.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_3a, component -> step_3a, execution path -> .route_1.1.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, handling join for execution path -> .route_1.3.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, handling join for execution path -> .route_1.2.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, handling join for execution path -> .route_1.1.
-[com.altar.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_8, component -> step_8, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> start, component -> start, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing parallel routing rule -> route_1, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_2, component -> step_2, execution path -> .route_1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_4, component -> step_4, execution path -> .route_1.2.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_6, component -> step_6, execution path -> .route_1.3.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_3, component -> step_3, execution path -> .route_1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_7, component -> step_7, execution path -> .route_1.3.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_5, component -> step_5, execution path -> .route_1.2.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_3a, component -> step_3a, execution path -> .route_1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, handling join for execution path -> .route_1.3.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, handling join for execution path -> .route_1.2.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, handling join for execution path -> .route_1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask] - Case id -> 2, executing step -> step_8, component -> step_8, execution path -> .
 Received event -> ON_PROCESS_COMPLETE
 ```
 

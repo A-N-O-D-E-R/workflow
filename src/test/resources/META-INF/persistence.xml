@@ -1,21 +1,21 @@
 <persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
     <persistence-unit name="WorkflowUnit">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <class>com.altar.workflow.entities.sla.Milestone</class>
-        <class>com.altar.workflow.entities.sla.FutureMilestones</class>
-        <class>com.altar.workflow.entities.tickets.Ticket</class>
-        <class>com.altar.workflow.entities.steps.Branch</class>
-        <class>com.altar.workflow.entities.steps.Persist</class>
-        <class>com.altar.workflow.entities.steps.Pause</class>
-        <class>com.altar.workflow.entities.steps.Task</class>
-        <class>com.altar.workflow.entities.steps.Route</class>
-        <class>com.altar.workflow.entities.steps.Join</class>
-        <class>com.altar.workflow.entities.steps.Step</class>
-        <class>com.altar.workflow.entities.workflows.WorkflowVariable</class>
-        <class>com.altar.workflow.entities.workflows.WorkflowInfo</class>
-        <class>com.altar.workflow.entities.workflows.paths.ExecPath</class>
-        <class>com.altar.workflow.entities.workflows.WorkflowDefinition</class>
-        <class>com.altar.workflow.service.ErrorHandler</class>
+        <class>com.anode.workflow.entities.sla.Milestone</class>
+        <class>com.anode.workflow.entities.sla.FutureMilestones</class>
+        <class>com.anode.workflow.entities.tickets.Ticket</class>
+        <class>com.anode.workflow.entities.steps.Branch</class>
+        <class>com.anode.workflow.entities.steps.Persist</class>
+        <class>com.anode.workflow.entities.steps.Pause</class>
+        <class>com.anode.workflow.entities.steps.Task</class>
+        <class>com.anode.workflow.entities.steps.Route</class>
+        <class>com.anode.workflow.entities.steps.Join</class>
+        <class>com.anode.workflow.entities.steps.Step</class>
+        <class>com.anode.workflow.entities.workflows.WorkflowVariable</class>
+        <class>com.anode.workflow.entities.workflows.WorkflowInfo</class>
+        <class>com.anode.workflow.entities.workflows.paths.ExecPath</class>
+        <class>com.anode.workflow.entities.workflows.WorkflowDefinition</class>
+        <class>com.anode.workflow.service.ErrorHandler</class>
         <properties>
             <!-- Database connection properties -->
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/test"/>
