@@ -20,7 +20,7 @@ import org.hibernate.annotations.Type;
 @Table(name = "workflow_variable")
 public class WorkflowVariable implements Serializable {
 
-    @Id private Serializable hibid;
+    @Id private Long hibid;
 
     private String name = null;
 
