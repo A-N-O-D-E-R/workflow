@@ -14,9 +14,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
+import lombok.Getter;
+
 import java.io.Serializable;
 
 @Entity
+@Getter
 @Table(name = "step")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "step_class", discriminatorType = DiscriminatorType.STRING)

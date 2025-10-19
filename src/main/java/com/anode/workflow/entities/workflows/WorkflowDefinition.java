@@ -25,7 +25,7 @@ import lombok.Setter;
 @Setter
 @Table(name = "workflow_definition")
 public class WorkflowDefinition implements Serializable {
-    @Id private Serializable hibid;
+    @Id private Long hibid;
 
     @Column(name = "name", nullable = false)
     private String name = null;

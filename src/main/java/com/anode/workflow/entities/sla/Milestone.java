@@ -3,6 +3,7 @@ package com.anode.workflow.entities.sla;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.io.Serializable;
@@ -23,7 +24,7 @@ import lombok.Setter;
 public class Milestone implements Serializable {
     private static final String SLA_ACTION_REGEX =
             "^(CORR|CORR:([a-zA-Z_]+)|CORR_ALL|RESUME|RETRY|CANCEL:([a-zA-Z0-9]+)|CANCEL:([a-zA-Z0-9]+):(C|D)|DECLINE:([a-zA-Z0-9]+)|CHG_WB:([a-zA-Z][a-zA-Z0-9_]*)|RAISE_INC:([a-zA-Z0-9_]*)|CUSTOM:(([a-zA-Z][a-zA-Z0-9_]*)|(([a-zA-Z][a-zA-Z0-9_]*(.))+([a-zA-Z][a-zA-Z0-9_]*)))|CUSTOM:(([a-zA-Z][a-zA-Z0-9_]*)|(([a-zA-Z][a-zA-Z0-9_]*(.))+([a-zA-Z][a-zA-Z0-9_]*))):([a-zA-Z0-9]+))$";
-    @Id private Serializable hibid;
+    @Id private Long hibid;
     private String name;
     private Setup setupOn;
     private SetupOption type;
@@ -37,7 +38,7 @@ public class Milestone implements Serializable {
     private ClockStartOption clockStarts;
     private String action;
     private String userData;
-    @OneToMany private List<FutureMilestones> furtherMilestones;
+    @OneToMany @JoinColumn(name = "milestone_id") private List<FutureMilestones> furtherMilestones;
 
     public Milestone(
             String name,

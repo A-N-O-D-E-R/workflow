@@ -31,7 +31,7 @@ import lombok.Getter;
 @Entity
 public class WorkflowInfo implements Serializable {
 
-    @Id private Serializable hibid;
+    @Id private Long hibid;
 
     @Column private final String caseId;
 
