@@ -1,15 +1,20 @@
-package com.anode.workflow.storage.db.sql.common;
+package com.anode.workflow.storage.db.sql.common.repository;
 
 import com.anode.tool.service.CommonRepository;
 import com.anode.workflow.entities.workflows.WorkflowDefinition;
-import jakarta.persistence.*;
 
-import java.util.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 public class WorkflowRepositoryImpl implements CommonRepository<WorkflowDefinition, Long> {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @PersistenceContext private EntityManager entityManager;
 
     @Override
     public Optional<WorkflowDefinition> get(Long id) {
@@ -24,7 +29,8 @@ public class WorkflowRepositoryImpl implements CommonRepository<WorkflowDefiniti
 
     @Override
     public <S extends WorkflowDefinition> S saveOrUpdate(S entity) {
-        if (entity.getHibid() == null || entityManager.find(WorkflowDefinition.class, entity.getHibid()) == null) {
+        if (entity.getHibid() == null
+                || entityManager.find(WorkflowDefinition.class, entity.getHibid()) == null) {
             entityManager.persist(entity);
         } else {
             entity = entityManager.merge(entity);
@@ -61,16 +67,22 @@ public class WorkflowRepositoryImpl implements CommonRepository<WorkflowDefiniti
 
     @Override
     public <S extends WorkflowDefinition> List<S> getAll() {
-        TypedQuery<WorkflowDefinition> query = entityManager.createQuery("SELECT w FROM WorkflowDefinition w", WorkflowDefinition.class);
+        TypedQuery<WorkflowDefinition> query =
+                entityManager.createQuery(
+                        "SELECT w FROM WorkflowDefinition w", WorkflowDefinition.class);
         @SuppressWarnings("unchecked")
         List<S> result = (List<S>) query.getResultList();
         return result;
     }
 
     @Override
-    public <S extends WorkflowDefinition> S getUniqueItem(String uniqueKeyName, String uniqueKeyValue) {
-        String ql = String.format("SELECT w FROM WorkflowDefinition w WHERE w.%s = :val", uniqueKeyName);
-        TypedQuery<WorkflowDefinition> query = entityManager.createQuery(ql, WorkflowDefinition.class);
+    public <S extends WorkflowDefinition> S getUniqueItem(
+            String uniqueKeyName, String uniqueKeyValue) {
+        String ql =
+                String.format(
+                        "SELECT w FROM WorkflowDefinition w WHERE w.%s = :val", uniqueKeyName);
+        TypedQuery<WorkflowDefinition> query =
+                entityManager.createQuery(ql, WorkflowDefinition.class);
         query.setParameter("val", uniqueKeyValue);
         List<WorkflowDefinition> result = query.getResultList();
         return result.isEmpty() ? null : (S) result.get(0);
@@ -80,6 +92,4 @@ public class WorkflowRepositoryImpl implements CommonRepository<WorkflowDefiniti
     public <S extends WorkflowDefinition> S getLocked(Long id) {
         return (S) entityManager.find(WorkflowDefinition.class, id, LockModeType.PESSIMISTIC_WRITE);
     }
-
-
 }

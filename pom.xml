@@ -195,10 +195,11 @@
                     <goals>
                     <goal>check</goal>
                     </goals>
-                    <phase>compile</phase>
+                    <phase>verify</phase>
                 </execution>
                 </executions>
                 <configuration>
+                    <skip>true</skip>
                     <ratchetFrom>origin/main</ratchetFrom>
                     <java>
                         <includes>

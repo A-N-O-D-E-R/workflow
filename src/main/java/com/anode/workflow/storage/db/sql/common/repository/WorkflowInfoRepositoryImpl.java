@@ -1,11 +1,16 @@
-package com.anode.workflow.storage.db.sql.common;
+package com.anode.workflow.storage.db.sql.common.repository;
 
 import com.anode.tool.service.CommonRepository;
 import com.anode.workflow.entities.workflows.WorkflowInfo;
 
-import jakarta.persistence.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.TypedQuery;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 public class WorkflowInfoRepositoryImpl implements CommonRepository<WorkflowInfo, Long> {
 
@@ -39,7 +44,8 @@ public class WorkflowInfoRepositoryImpl implements CommonRepository<WorkflowInfo
         EntityTransaction tx = entityManager.getTransaction();
         tx.begin();
         try {
-            if (entity.getHibid() == null || entityManager.find(WorkflowInfo.class, entity.getHibid()) == null) {
+            if (entity.getHibid() == null
+                    || entityManager.find(WorkflowInfo.class, entity.getHibid()) == null) {
                 entityManager.persist(entity);
             } else {
                 entity = entityManager.merge(entity);
@@ -82,21 +88,26 @@ public class WorkflowInfoRepositoryImpl implements CommonRepository<WorkflowInfo
 
     @Override
     public <S extends WorkflowInfo> List<S> getAll() {
-        TypedQuery<WorkflowInfo> query = entityManager.createQuery("SELECT w FROM WorkflowInfo w", WorkflowInfo.class);
+        TypedQuery<WorkflowInfo> query =
+                entityManager.createQuery("SELECT w FROM WorkflowInfo w", WorkflowInfo.class);
         @SuppressWarnings("unchecked")
         List<S> result = (List<S>) query.getResultList();
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <S extends WorkflowInfo> S getUniqueItem(String key, String value) {
-        TypedQuery<WorkflowInfo> query = entityManager.createQuery(
-                "SELECT w FROM WorkflowInfo w WHERE w." + key + " = :val", WorkflowInfo.class);
+        TypedQuery<WorkflowInfo> query =
+                entityManager.createQuery(
+                        "SELECT w FROM WorkflowInfo w WHERE w." + key + " = :val",
+                        WorkflowInfo.class);
         query.setParameter("val", value);
         List<WorkflowInfo> results = query.getResultList();
         return results.isEmpty() ? null : (S) results.get(0);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <S extends WorkflowInfo> S getLocked(Long id) {
         return (S) entityManager.find(WorkflowInfo.class, id, LockModeType.PESSIMISTIC_WRITE);
@@ -125,7 +136,8 @@ public class WorkflowInfoRepositoryImpl implements CommonRepository<WorkflowInfo
         tx.begin();
         try {
             for (S obj : objects) {
-                if (obj.getHibid() == null || entityManager.find(WorkflowInfo.class, obj.getHibid()) == null) {
+                if (obj.getHibid() == null
+                        || entityManager.find(WorkflowInfo.class, obj.getHibid()) == null) {
                     entityManager.persist(obj);
                 } else {
                     entityManager.merge(obj);
@@ -138,4 +150,3 @@ public class WorkflowInfoRepositoryImpl implements CommonRepository<WorkflowInfo
         }
     }
 }
-

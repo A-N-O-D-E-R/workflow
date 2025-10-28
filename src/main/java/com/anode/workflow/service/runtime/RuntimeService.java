@@ -317,6 +317,7 @@ public class RuntimeService {
         workflowInfo.getSetter().setTicket(ticket);
 
         // write back the process info
+        workflowInfo.setHibid(null);
         dao.saveOrUpdate(WORKFLOW_INFO + SEP + caseId, workflowInfo);
 
         WorkflowContext workflowContext = null;
