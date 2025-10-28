@@ -1,5 +1,15 @@
 package com.anode.workflow.storage.db.sql.postgres;
 
+import com.anode.tool.service.CommonService;
+import com.anode.tool.service.IdFactory;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -14,16 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import com.anode.tool.service.CommonService;
-import com.anode.tool.service.IdFactory;
-
-import jakarta.persistence.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PostgresCommonDAO implements CommonService{
-    
+public class PostgresCommonDAO implements CommonService {
+
     private Connection connection;
 
     // -------------------- Utility Methods --------------------
@@ -71,71 +76,94 @@ public class PostgresCommonDAO implements CommonService{
     }
 
     private Object generateId(Field idField) throws Exception {
-            GeneratedValue gv = getGeneratedValue(idField);
-            if (gv == null) return null;
+        GeneratedValue gv = getGeneratedValue(idField);
+        if (gv == null) return null;
 
-            GenerationType strategy = gv.strategy();
-            String generator = gv.generator();
+        GenerationType strategy = gv.strategy();
+        String generator = gv.generator();
 
-            switch (strategy) {
-                case IDENTITY:
-                    // handled by PostgreSQL automatically
-                    return null;
-                case SEQUENCE:
-                    if (generator == null || generator.isEmpty()) {
-                        throw new IllegalStateException("Sequence strategy requires @GeneratedValue(generator = 'sequence_name')");
+        switch (strategy) {
+            case IDENTITY:
+                // handled by PostgreSQL automatically
+                return null;
+            case SEQUENCE:
+                if (generator == null || generator.isEmpty()) {
+                    throw new IllegalStateException(
+                            "Sequence strategy requires @GeneratedValue(generator ="
+                                    + " 'sequence_name')");
+                }
+                try (PreparedStatement ps = connection.prepareStatement("SELECT nextval(?)")) {
+                    ps.setString(1, generator);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) return rs.getObject(1);
                     }
-                    try (PreparedStatement ps = connection.prepareStatement("SELECT nextval(?)")) {
-                        ps.setString(1, generator);
-                        try (ResultSet rs = ps.executeQuery()) {
-                            if (rs.next()) return rs.getObject(1);
-                        }
-                    }
-                    break;
-                case TABLE:
-                    // simplified table generator (rarely used)
-                    String tableName = "id_generator";
-                    String pkColumnName = "seq_name";
-                    String valueColumnName = "next_val";
+                }
+                break;
+            case TABLE:
+                // simplified table generator (rarely used)
+                String tableName = "id_generator";
+                String pkColumnName = "seq_name";
+                String valueColumnName = "next_val";
 
-                    if (generator == null || generator.isEmpty()) {
-                        generator = idField.getDeclaringClass().getSimpleName().toLowerCase() + "_seq";
-                    }
+                if (generator == null || generator.isEmpty()) {
+                    generator = idField.getDeclaringClass().getSimpleName().toLowerCase() + "_seq";
+                }
 
-                    connection.createStatement().executeUpdate(
-                        "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
-                        pkColumnName + " VARCHAR(255) PRIMARY KEY, " +
-                        valueColumnName + " BIGINT NOT NULL)"
-                    );
+                connection
+                        .createStatement()
+                        .executeUpdate(
+                                "CREATE TABLE IF NOT EXISTS "
+                                        + tableName
+                                        + " ("
+                                        + pkColumnName
+                                        + " VARCHAR(255) PRIMARY KEY, "
+                                        + valueColumnName
+                                        + " BIGINT NOT NULL)");
 
-                    try (PreparedStatement ps = connection.prepareStatement(
-                            "INSERT INTO " + tableName + " (" + pkColumnName + ", " + valueColumnName + ") " +
-                            "VALUES (?, 1) ON CONFLICT (" + pkColumnName + ") DO UPDATE " +
-                            "SET " + valueColumnName + " = " + tableName + "." + valueColumnName + " + 1 RETURNING " + valueColumnName)) {
-                        ps.setString(1, generator);
-                        try (ResultSet rs = ps.executeQuery()) {
-                            if (rs.next()) return rs.getObject(1);
-                        }
+                try (PreparedStatement ps =
+                        connection.prepareStatement(
+                                "INSERT INTO "
+                                        + tableName
+                                        + " ("
+                                        + pkColumnName
+                                        + ", "
+                                        + valueColumnName
+                                        + ") "
+                                        + "VALUES (?, 1) ON CONFLICT ("
+                                        + pkColumnName
+                                        + ") DO UPDATE "
+                                        + "SET "
+                                        + valueColumnName
+                                        + " = "
+                                        + tableName
+                                        + "."
+                                        + valueColumnName
+                                        + " + 1 RETURNING "
+                                        + valueColumnName)) {
+                    ps.setString(1, generator);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) return rs.getObject(1);
                     }
-                    break;
-                case AUTO:
-                default:
-                    // For PostgreSQL default to SEQUENCE-based generation
-                    String autoSeq = (generator == null || generator.isEmpty())
-                            ? idField.getDeclaringClass().getSimpleName().toLowerCase() + "_id_seq"
-                            : generator;
-                    try (PreparedStatement ps = connection.prepareStatement("SELECT nextval(?)")) {
-                        ps.setString(1, autoSeq);
-                        try (ResultSet rs = ps.executeQuery()) {
-                            if (rs.next()) return rs.getObject(1);
-                        }
+                }
+                break;
+            case AUTO:
+            default:
+                // For PostgreSQL default to SEQUENCE-based generation
+                String autoSeq =
+                        (generator == null || generator.isEmpty())
+                                ? idField.getDeclaringClass().getSimpleName().toLowerCase()
+                                        + "_id_seq"
+                                : generator;
+                try (PreparedStatement ps = connection.prepareStatement("SELECT nextval(?)")) {
+                    ps.setString(1, autoSeq);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) return rs.getObject(1);
                     }
-            }
-            return null;
+                }
         }
+        return null;
+    }
 
-
-    
     @Override
     public void delete(Serializable arg0) {
         // TODO Auto-generated method stub
@@ -143,7 +171,7 @@ public class PostgresCommonDAO implements CommonService{
     }
 
     @Override
-    public void save(Object entity) {
+    public void save(Serializable id, Object entity) {
         Class<?> clazz = entity.getClass();
         String tableName = getTableName(clazz);
         Field idField = getIdField(clazz);
@@ -178,9 +206,23 @@ public class PostgresCommonDAO implements CommonService{
                 }
             }
 
-            String sql = idGeneratedByDB
-                    ? "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + placeholders + ") RETURNING " + getColumnName(idField)
-                    : "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + placeholders + ")";
+            String sql =
+                    idGeneratedByDB
+                            ? "INSERT INTO "
+                                    + tableName
+                                    + " ("
+                                    + columns
+                                    + ") VALUES ("
+                                    + placeholders
+                                    + ") RETURNING "
+                                    + getColumnName(idField)
+                            : "INSERT INTO "
+                                    + tableName
+                                    + " ("
+                                    + columns
+                                    + ") VALUES ("
+                                    + placeholders
+                                    + ")";
 
             log.debug("Executing SQL: {}", sql);
 
@@ -197,7 +239,8 @@ public class PostgresCommonDAO implements CommonService{
                         if (rs.next()) {
                             Object generatedId = rs.getObject(1);
                             idField.set(entity, generatedId);
-                            log.debug("Generated ID for {}: {}", clazz.getSimpleName(), generatedId);
+                            log.debug(
+                                    "Generated ID for {}: {}", clazz.getSimpleName(), generatedId);
                         }
                     }
                 } else {
@@ -238,7 +281,7 @@ public class PostgresCommonDAO implements CommonService{
     }
 
     @Override
-    public void update(Object entity) {
+    public void update(Serializable id, Object entity) {
         Class<?> clazz = entity.getClass();
         String table = getTableName(clazz);
         Field idField = getIdField(clazz);
@@ -247,12 +290,14 @@ public class PostgresCommonDAO implements CommonService{
 
         try {
             Object idValue = idField.get(entity);
-            if (idValue == null) throw new IllegalArgumentException("Cannot update entity without ID");
+            if (idValue == null)
+                throw new IllegalArgumentException("Cannot update entity without ID");
 
-            String setClause = fields.stream()
-                    .filter(f -> !f.equals(idField))
-                    .map(f -> getColumnName(f) + " = ?")
-                    .collect(Collectors.joining(", "));
+            String setClause =
+                    fields.stream()
+                            .filter(f -> !f.equals(idField))
+                            .map(f -> getColumnName(f) + " = ?")
+                            .collect(Collectors.joining(", "));
 
             String sql = "UPDATE " + table + " SET " + setClause + " WHERE " + idCol + " = ?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -271,23 +316,22 @@ public class PostgresCommonDAO implements CommonService{
         }
     }
 
-
-     // -------------------- Helper & Batch Methods --------------------
+    // -------------------- Helper & Batch Methods --------------------
 
     @Override
     public void saveCollection(Collection collection) {
-        for (Object o : collection) save(o);
+        for (Object o : collection) save(null, o);
     }
 
     @Override
-    public void saveOrUpdate(Object entity) {
+    public void saveOrUpdate(Serializable id, Object entity) {
         try {
             Field idField = getIdField(entity.getClass());
             Object idVal = idField.get(entity);
             if (idVal == null || get(entity.getClass(), (Serializable) idVal) == null) {
-                save(entity);
+                save(id, entity);
             } else {
-                update(entity);
+                update(id, entity);
             }
         } catch (Exception e) {
             log.error("Error saveOrUpdate {}", entity.getClass().getSimpleName(), e);
@@ -297,7 +341,7 @@ public class PostgresCommonDAO implements CommonService{
 
     @Override
     public void saveOrUpdateCollection(Collection collection) {
-        for (Object o : collection) saveOrUpdate(o);
+        for (Object o : collection) saveOrUpdate(null, o);
     }
 
     @Override
@@ -333,7 +377,7 @@ public class PostgresCommonDAO implements CommonService{
         String sql = "SELECT * FROM " + tableName;
 
         try (PreparedStatement ps = connection.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
+                ResultSet rs = ps.executeQuery()) {
 
             List<Field> fields = getPersistentFields(type);
 
@@ -357,7 +401,6 @@ public class PostgresCommonDAO implements CommonService{
 
         return result;
     }
-
 
     @Override
     public <T> T getUniqueItem(Class<T> type, String uniqueKeyName, String uniqueKeyValue) {
@@ -395,7 +438,12 @@ public class PostgresCommonDAO implements CommonService{
                 }
             }
         } catch (Exception e) {
-            log.error("Error retrieving unique item of {} where {} = {}", type.getSimpleName(), uniqueKeyName, uniqueKeyValue, e);
+            log.error(
+                    "Error retrieving unique item of {} where {} = {}",
+                    type.getSimpleName(),
+                    uniqueKeyName,
+                    uniqueKeyValue,
+                    e);
             throw new RuntimeException(e);
         }
 
@@ -407,19 +455,26 @@ public class PostgresCommonDAO implements CommonService{
         String table = "counters"; // a simple table to store counters
         try (Statement stmt = connection.createStatement()) {
             // Create table if not exists
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + table + " (" +
-                    "counter_name VARCHAR(255) PRIMARY KEY, " +
-                    "counter_value BIGINT NOT NULL)"
-            );
+            stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS "
+                            + table
+                            + " ("
+                            + "counter_name VARCHAR(255) PRIMARY KEY, "
+                            + "counter_value BIGINT NOT NULL)");
         } catch (SQLException e) {
             throw new RuntimeException("Failed to create counter table", e);
         }
 
         long newValue = 0;
-        String sql = "INSERT INTO " + table + " (counter_name, counter_value) " +
-                    "VALUES (?, 1) " +
-                    "ON CONFLICT (counter_name) DO UPDATE SET counter_value = " + table + ".counter_value + 1 " +
-                    "RETURNING counter_value";
+        String sql =
+                "INSERT INTO "
+                        + table
+                        + " (counter_name, counter_value) "
+                        + "VALUES (?, 1) "
+                        + "ON CONFLICT (counter_name) DO UPDATE SET counter_value = "
+                        + table
+                        + ".counter_value + 1 "
+                        + "RETURNING counter_value";
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, counterName);
@@ -435,7 +490,7 @@ public class PostgresCommonDAO implements CommonService{
         return newValue;
     }
 
-   @Override
+    @Override
     public Map<Serializable, Serializable> makeClone(Object obj, IdFactory idFactory) {
         Map<Serializable, Serializable> idMapping = new HashMap<>();
         Class<?> clazz = obj.getClass();
@@ -462,29 +517,32 @@ public class PostgresCommonDAO implements CommonService{
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to clone object of class " + clazz.getSimpleName(), e);
+            throw new RuntimeException(
+                    "Failed to clone object of class " + clazz.getSimpleName(), e);
         }
         return idMapping;
     }
 
-   @Override
+    @Override
     public Serializable getMinimalId(Comparator<Serializable> comparator) {
         String table = "counters";
         List<Serializable> ids = new ArrayList<>();
 
         try (Statement stmt = connection.createStatement()) {
             // Ensure the counters table exists
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + table + " (" +
-                    "counter_name VARCHAR(255) PRIMARY KEY, " +
-                    "counter_value BIGINT NOT NULL)"
-            );
+            stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS "
+                            + table
+                            + " ("
+                            + "counter_name VARCHAR(255) PRIMARY KEY, "
+                            + "counter_value BIGINT NOT NULL)");
         } catch (SQLException e) {
             throw new RuntimeException("Failed to ensure counters table exists", e);
         }
 
         String sql = "SELECT counter_value FROM " + table;
         try (PreparedStatement ps = connection.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
+                ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 ids.add(rs.getLong("counter_value"));
@@ -501,6 +559,4 @@ public class PostgresCommonDAO implements CommonService{
         // Use provided comparator to find the smallest (or custom-defined minimal)
         return ids.stream().min(comparator).orElse(null);
     }
-
-
 }

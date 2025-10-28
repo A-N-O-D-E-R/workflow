@@ -1,16 +1,14 @@
-package com.anode.workflow.storage.db.sql.common;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+package com.anode.workflow.storage.db.sql.common.repository;
 
 import com.anode.tool.service.CommonRepository;
 import com.anode.workflow.entities.workflows.WorkflowVariable;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.TypedQuery;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 public class WorkflowVariableRepositoryImpl implements CommonRepository<WorkflowVariable, Long> {
 
@@ -64,7 +62,8 @@ public class WorkflowVariableRepositoryImpl implements CommonRepository<Workflow
     @Override
     public <S extends WorkflowVariable> List<S> getAll() {
         TypedQuery<WorkflowVariable> query =
-                entityManager.createQuery("SELECT wv FROM WorkflowVariable wv", WorkflowVariable.class);
+                entityManager.createQuery(
+                        "SELECT wv FROM WorkflowVariable wv", WorkflowVariable.class);
         @SuppressWarnings("unchecked")
         List<S> result = (List<S>) query.getResultList();
         return result;
@@ -73,7 +72,9 @@ public class WorkflowVariableRepositoryImpl implements CommonRepository<Workflow
     @Override
     public <S extends WorkflowVariable> S getUniqueItem(String key, String value) {
         TypedQuery<WorkflowVariable> query =
-                entityManager.createQuery("SELECT wv FROM WorkflowVariable wv WHERE wv." + key + " = :val", WorkflowVariable.class);
+                entityManager.createQuery(
+                        "SELECT wv FROM WorkflowVariable wv WHERE wv." + key + " = :val",
+                        WorkflowVariable.class);
         query.setParameter("val", value);
         List<WorkflowVariable> results = query.getResultList();
         return results.isEmpty() ? null : (S) results.get(0);
@@ -111,7 +112,8 @@ public class WorkflowVariableRepositoryImpl implements CommonRepository<Workflow
 
         try {
             for (S obj : objects) {
-                if (obj.getHibid() == null || entityManager.find(WorkflowVariable.class, obj.getHibid()) == null) {
+                if (obj.getHibid() == null
+                        || entityManager.find(WorkflowVariable.class, obj.getHibid()) == null) {
                     entityManager.persist(obj);
                 } else {
                     entityManager.merge(obj);
