@@ -11,6 +11,14 @@
     <name>simple-workflow</name>
     <description>A simple workflow implementation.</description>
 
+   <distributionManagement>
+        <repository>
+            <id>b2-releases</id>
+            <name>B2 Maven Repository - Releases</name>
+            <url>b2://A-N-O-D-E-R/maven-releases</url>
+        </repository>
+    </distributionManagement>
+    
     <properties>
         <spotless.version>2.40.0</spotless.version>
         <hibernate.core.version>6.0.0.Final</hibernate.core.version>
@@ -118,6 +126,13 @@
     </dependencies>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>com.anode.maven.wagon</groupId>
+                <artifactId>wagon-b2</artifactId>
+                <version>1.0.0</version>
+            </extension>
+        </extensions>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
