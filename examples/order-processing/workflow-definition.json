@@ -1,0 +1,66 @@
+{
+  "processDefinitionId": "order-processing",
+  "processDefinitionVersion": "1.0.0",
+  "processDefinitionName": "Order Processing Workflow",
+  "description": "Handles complete order processing from validation to notification",
+
+  "steps": [
+    {
+      "stepId": "validate",
+      "stepName": "Validate Order",
+      "stepType": "validateOrder",
+      "executionPath": "main",
+      "order": 1,
+      "description": "Validate order data and business rules"
+    },
+    {
+      "stepId": "inventory",
+      "stepName": "Check Inventory",
+      "stepType": "checkInventory",
+      "executionPath": "main",
+      "order": 2,
+      "description": "Verify all items are in stock"
+    },
+    {
+      "stepId": "payment",
+      "stepName": "Process Payment",
+      "stepType": "processPayment",
+      "executionPath": "main",
+      "order": 3,
+      "description": "Charge customer's payment method"
+    },
+    {
+      "stepId": "ship",
+      "stepName": "Ship Order",
+      "stepType": "shipOrder",
+      "executionPath": "main",
+      "order": 4,
+      "description": "Create shipment and generate tracking"
+    },
+    {
+      "stepId": "notify",
+      "stepName": "Send Notification",
+      "stepType": "sendNotification",
+      "executionPath": "main",
+      "order": 5,
+      "description": "Email customer with confirmation"
+    }
+  ],
+
+  "routes": [],
+
+  "milestones": [
+    {
+      "milestoneId": "order-received",
+      "milestoneName": "Order Received",
+      "durationMinutes": 5,
+      "description": "Order should be validated within 5 minutes"
+    },
+    {
+      "milestoneId": "order-shipped",
+      "milestoneName": "Order Shipped",
+      "durationMinutes": 120,
+      "description": "Order should ship within 2 hours"
+    }
+  ]
+}
