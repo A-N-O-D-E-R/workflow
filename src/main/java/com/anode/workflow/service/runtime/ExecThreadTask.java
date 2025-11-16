@@ -102,6 +102,13 @@ public class ExecThreadTask implements Runnable {
                                         if (ticketName.isEmpty() == false) {
                                             Ticket ticket =
                                                     workflowDefinition.getTicket(ticketName);
+                                            if (ticket == null) {
+                                                throw new WorkflowRuntimeException(
+                                                        "Ticket not found: "
+                                                                + ticketName
+                                                                + " for case: "
+                                                                + workflowInfo.getCaseId());
+                                            }
                                             if (workflowInfo.getTicketUrt()
                                                     == StepResponseType.OK_PROCEED) {
                                                 if (execPath.getName().equals(".")) {
@@ -352,7 +359,21 @@ public class ExecThreadTask implements Runnable {
                 // Check if we are pended in a pause state
                 // if we are, set the next task of exec path to the one pointed to by pause
                 ep = workflowInfo.getExecPath(workflowInfo.getPendExecPath());
+                if (ep == null) {
+                    throw new WorkflowRuntimeException(
+                            "Execution path not found: "
+                                    + workflowInfo.getPendExecPath()
+                                    + " for case: "
+                                    + workflowInfo.getCaseId());
+                }
                 Step c = workflowDefinition.getStep(ep.getStep());
+                if (c == null) {
+                    throw new WorkflowRuntimeException(
+                            "Step not found: "
+                                    + ep.getStep()
+                                    + " for case: "
+                                    + workflowInfo.getCaseId());
+                }
                 if (c.getType() == StepType.PAUSE) {
                     Pause p = (Pause) c;
                     ep.set(ExecPathStatus.STARTED, p.getNext(), null);
@@ -542,6 +563,13 @@ public class ExecThreadTask implements Runnable {
                                 if (execPath.getName().equals(".")) {
                                     // we only need to set next, clear out ticket and proceed
                                     Ticket ticket = workflowDefinition.getTicket(ticketName);
+                                    if (ticket == null) {
+                                        throw new WorkflowRuntimeException(
+                                                "Ticket not found: "
+                                                        + ticketName
+                                                        + " for case: "
+                                                        + workflowInfo.getCaseId());
+                                    }
                                     next = ticket.getStep();
                                     workflowInfo.getSetter().setTicket("");
                                 } else {

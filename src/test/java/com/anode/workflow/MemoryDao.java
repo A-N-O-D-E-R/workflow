@@ -5,29 +5,22 @@ import com.anode.tool.service.IdFactory;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class MemoryDao implements CommonService {
 
-    private Map<Serializable, Long> counters = new HashMap<>();
-    private Map<Serializable, Boolean> lockedObjects = new HashMap<>();
-    private Map<Serializable, Object> documents = new HashMap<>();
+    private Map<Serializable, Long> counters = new ConcurrentHashMap<>();
+    private Map<Serializable, Boolean> lockedObjects = new ConcurrentHashMap<>();
+    private Map<Serializable, Object> documents = new ConcurrentHashMap<>();
 
     @Override
-    public synchronized long incrCounter(String key) {
-        Long val = counters.get(key);
-        if (val == null) {
-            val = 0L;
-            counters.put(key, val);
-        } else {
-            val = val + 1;
-            counters.put(key, val);
-        }
-        return val;
+    public long incrCounter(String key) {
+        // Use atomic compute operation for thread-safe increment
+        return counters.compute(key, (k, v) -> v == null ? 1L : v + 1);
     }
 
     public Map<Serializable, Object> getDocumentMap() {
