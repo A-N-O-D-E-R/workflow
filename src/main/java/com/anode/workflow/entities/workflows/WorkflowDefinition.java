@@ -14,9 +14,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -132,7 +132,7 @@ public class WorkflowDefinition implements Serializable {
     @CollectionTable(name = "workflow_tickets", joinColumns = @JoinColumn(name = "workflow_hibid"))
     @MapKeyColumn(name = "ticket_key")
     @Column(name = "ticket_value")
-    private Map<String, Ticket> tickets = new HashMap<>();
+    private Map<String, Ticket> tickets = new ConcurrentHashMap<>();
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "workflow_id")
@@ -151,7 +151,7 @@ public class WorkflowDefinition implements Serializable {
      * using the respective setter methods.
      */
     public WorkflowDefinition() {
-        this.steps = new HashMap<>();
+        this.steps = new ConcurrentHashMap<>();
     }
 
     public String getName() {

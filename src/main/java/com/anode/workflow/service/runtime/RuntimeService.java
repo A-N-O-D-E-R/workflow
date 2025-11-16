@@ -124,8 +124,9 @@ public class RuntimeService {
     protected WorkflowDefinition workflowDefinition = null;
     protected WorkflowInfo workflowInfo = null;
     protected SlaQueueManager slaQm = null;
-    protected String lastPendWorkBasket = null;
-    protected String lastPendStep = null;
+    // Made volatile for visibility across threads in concurrent workflow execution
+    protected volatile String lastPendWorkBasket = null;
+    protected volatile String lastPendStep = null;
     private List<Milestone> sla = null;
 
     /**
