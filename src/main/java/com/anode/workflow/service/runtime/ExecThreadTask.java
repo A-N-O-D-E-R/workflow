@@ -51,8 +51,8 @@ public class ExecThreadTask implements Runnable {
     private boolean writeAuditLog = true;
 
     protected ExecThreadTask(RuntimeService rts) {
-        this.workflowDefinition = rts.workflowDefinition;
-        this.workflowInfo = rts.workflowInfo;
+        this.workflowDefinition = rts.workflowDefinition.get();
+        this.workflowInfo = rts.workflowInfo.get();
         this.rts = rts;
     }
 

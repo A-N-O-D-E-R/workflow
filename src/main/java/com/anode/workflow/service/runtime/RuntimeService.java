@@ -12,6 +12,7 @@ import com.anode.workflow.entities.workflows.WorkflowInfo;
 import com.anode.workflow.entities.workflows.WorkflowVariable;
 import com.anode.workflow.entities.workflows.WorkflowVariables;
 import com.anode.workflow.entities.workflows.paths.ExecPath;
+import com.anode.workflow.exceptions.RuntimeBusyException;
 import com.anode.workflow.exceptions.WorkflowRuntimeException;
 import com.anode.workflow.service.EventHandler;
 import com.anode.workflow.service.SlaQueueManager;
@@ -90,8 +91,12 @@ import lombok.extern.slf4j.Slf4j;
  * }</pre>
  *
  * <h2>Thread Safety</h2>
- * This class is thread-safe for operations on different case IDs. Operations on the same
- * case ID should be serialized externally to avoid race conditions.
+ * This class is thread-safe for operations on different case IDs. The {@link #startCase} method
+ * allows only one case to be started at a time. If a thread attempts to start a case while another
+ * case is already being started, a {@link WorkflowRuntimeException} will be thrown immediately
+ * instead of blocking. This fail-fast behavior prevents race conditions during case initialization
+ * while avoiding thread contention. Operations on the same case ID should be serialized externally
+ * to avoid race conditions.
  *
  * @see WorkflowDefinition
  * @see WorkflowContext
@@ -121,13 +126,22 @@ public class RuntimeService {
     protected CommonService dao = null;
     protected WorkflowComponantFactory factory = null;
     protected EventHandler eventHandler = null;
-    protected WorkflowDefinition workflowDefinition = null;
-    protected WorkflowInfo workflowInfo = null;
+
+    // Thread-local storage for workflow state to support concurrent execution
+    // Each thread gets its own isolated copy of these fields
+    protected ThreadLocal<WorkflowDefinition> workflowDefinition = new ThreadLocal<>();
+    protected ThreadLocal<WorkflowInfo> workflowInfo = new ThreadLocal<>();
+    protected ThreadLocal<List<Milestone>> sla = new ThreadLocal<>();
+
     protected SlaQueueManager slaQm = null;
     // Made volatile for visibility across threads in concurrent workflow execution
     protected volatile String lastPendWorkBasket = null;
     protected volatile String lastPendStep = null;
-    private List<Milestone> sla = null;
+
+    // Flag to ensure only one case can be started at a time
+    // Uses AtomicBoolean for lock-free thread-safe compare-and-swap
+    private final java.util.concurrent.atomic.AtomicBoolean isStartingCase =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
 
     /**
      * Constructs a new RuntimeService with required dependencies.
@@ -157,7 +171,7 @@ public class RuntimeService {
         wb = (wb == null) ? "" : wb;
         log.info(
                 "Case id -> {}, raising event -> {}, comp name -> {}, work basket -> {}",
-                workflowInfo.getCaseId(),
+                workflowInfo.get().getCaseId(),
                 event.name(),
                 workflowContext.getCompName(),
                 wb);
@@ -175,17 +189,17 @@ public class RuntimeService {
             case ON_PERSIST:
             case ON_TICKET_RAISED:
                 try {
-                    workflowInfo.getLock().lock();
+                    workflowInfo.get().getLock().lock();
                     eventHandler.invoke(event, workflowContext);
                 } finally {
-                    workflowInfo.getLock().unlock();
+                    workflowInfo.get().getLock().unlock();
                 }
                 break;
         }
     }
 
     private void raiseSla(EventType event, WorkflowContext workflowContext) {
-        if ((sla == null) || (slaQm == null)) {
+        if ((sla.get() == null) || (slaQm == null)) {
             return;
         }
 
@@ -207,7 +221,7 @@ public class RuntimeService {
     private void setPrevPendWorkbasket(EventType event) {
         if (event == EventType.ON_PROCESS_PEND) {
             // set the prev pend work basket
-            ExecPath ep = workflowInfo.getExecPath(workflowInfo.getPendExecPath());
+            ExecPath ep = workflowInfo.get().getExecPath(workflowInfo.get().getPendExecPath());
             ep.setPrevPendWorkBasket(ep.getPendWorkBasket());
         }
     }
@@ -305,6 +319,7 @@ public class RuntimeService {
      * @param journeySla list of SLA milestones to track (may be null for no SLA tracking)
      * @return the {@link WorkflowContext} representing the current state after initial execution
      *
+     * @throws RuntimeBusyException if another case is currently being started
      * @throws WorkflowRuntimeException if the case ID is already in use
      * @throws WorkflowRuntimeException if workflow execution fails critically
      *
@@ -318,49 +333,62 @@ public class RuntimeService {
             String caseId,
             WorkflowDefinition journey,
             WorkflowVariables pvs,
-            List<Milestone> journeySla) {
-        if (pvs == null) {
-            pvs = new WorkflowVariables();
+            List<Milestone> journeySla) throws RuntimeBusyException{
+        // Try to acquire the "lock" - if another thread is starting a case, fail immediately
+        if (!isStartingCase.compareAndSet(false, true)) {
+            throw new RuntimeBusyException(
+                    "Cannot start case "
+                            + caseId
+                            + ". Another case is currently being started. Please try again later.");
         }
 
-        abortIfStarted(caseId);
+        try {
+            if (pvs == null) {
+                pvs = new WorkflowVariables();
+            }
 
-        // check if the journey definition file exists. If it does, then we need to treat it as a
-        // case of
-        // crash where the process was successfully started but the first step could not be executed
-        String key = JOURNEY + SEP + caseId;
-        boolean hasAlreadyStarted = false;
-        if (dao.get(WorkflowDefinition.class, key) != null) {
-            hasAlreadyStarted = true;
+            abortIfStarted(caseId);
+
+            // check if the journey definition file exists. If it does, then we need to treat it as a
+            // case of
+            // crash where the process was successfully started but the first step could not be executed
+            String key = JOURNEY + SEP + caseId;
+            boolean hasAlreadyStarted = false;
+            if (dao.get(WorkflowDefinition.class, key) != null) {
+                hasAlreadyStarted = true;
+            }
+
+            // read the process definition and get process info
+            workflowDefinition.set(journey);
+            // read the process definition and get process info
+            dao.saveOrUpdate(JOURNEY + SEP + caseId, workflowDefinition.get());
+            workflowInfo.set(WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition.get()));
+
+            // write and get the sla configuration
+            if (journeySla != null) {
+                sla.set(journeySla);
+                dao.saveOrUpdate(JOURNEY_SLA + SEP + caseId, sla.get());
+            }
+
+            // uworkflowDefinitionate process variables
+            List<WorkflowVariable> list = pvs.getListOfWorkflowVariable();
+            for (WorkflowVariable pv : list) {
+                workflowInfo.get().setWorkflowVariable(pv);
+            }
+
+            WorkflowContext workflowContext = null;
+            if (hasAlreadyStarted == false) {
+                log.info("Case id -> " + workflowInfo.get().getCaseId() + ", successfully created case");
+                workflowContext = WorkflowContext.forEvent(EventType.ON_PROCESS_START, this, ".");
+                invokeEventHandler(EventType.ON_PROCESS_START, workflowContext);
+            }
+
+            workflowContext = resumeCase(caseId, false, null);
+            return workflowContext;
+        } finally {
+            // Always release the flag, even if an exception occurs
+            isStartingCase.set(false);
         }
-
-        // read the process definition and get process info
-        workflowDefinition = journey;
-        // read the process definition and get process info
-        dao.saveOrUpdate(JOURNEY + SEP + caseId, workflowDefinition);
-        workflowInfo = WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition);
-
-        // write and get the sla configuration
-        if (journeySla != null) {
-            sla = journeySla;
-            dao.saveOrUpdate(JOURNEY_SLA + SEP + caseId, sla);
-        }
-
-        // uworkflowDefinitionate process variables
-        List<WorkflowVariable> list = pvs.getListOfWorkflowVariable();
-        for (WorkflowVariable pv : list) {
-            workflowInfo.setWorkflowVariable(pv);
-        }
-
-        WorkflowContext workflowContext = null;
-        if (hasAlreadyStarted == false) {
-            log.info("Case id -> " + workflowInfo.getCaseId() + ", successfully created case");
-            workflowContext = WorkflowContext.forEvent(EventType.ON_PROCESS_START, this, ".");
-            invokeEventHandler(EventType.ON_PROCESS_START, workflowContext);
-        }
-
-        workflowContext = resumeCase(caseId, false, null);
-        return workflowContext;
     }
 
     private WorkflowContext resumeCase(
@@ -373,43 +401,43 @@ public class RuntimeService {
                 throw new WorkflowRuntimeException(
                         "Could not resume case. No process definition found. Case id -> " + caseId);
             }
-            workflowDefinition = dao.get(WorkflowDefinition.class, key);
-            workflowInfo = WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition);
-            workflowInfo.isPendAtSameStep = true;
+            workflowDefinition.set(dao.get(WorkflowDefinition.class, key));
+            workflowInfo.set(WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition.get()));
+            workflowInfo.get().isPendAtSameStep = true;
 
             // uworkflowDefinitionate process variables. We will add or uworkflowDefinitionate the
             // ones passed in but not delete any
             if (workflowVariables != null) {
                 List<WorkflowVariable> list = workflowVariables.getListOfWorkflowVariable();
                 for (WorkflowVariable workflowVariable : list) {
-                    workflowInfo.setWorkflowVariable(workflowVariable);
+                    workflowInfo.get().setWorkflowVariable(workflowVariable);
                 }
             }
 
             // read sla configuration
             key = JOURNEY_SLA + SEP + caseId;
-            sla = dao.get(List.class, key);
+            sla.set(dao.get(List.class, key));
         }
 
         // check if we have already completed
-        if (workflowInfo.isCaseCompleted() == true) {
+        if (workflowInfo.get().isCaseCompleted() == true) {
             throw new WorkflowRuntimeException(
                     "Cannot resume a case that has already completed. Case id -> "
-                            + workflowInfo.getCaseId());
+                            + workflowInfo.get().getCaseId());
         }
 
         WorkflowContext workflowContext = null;
         if (raiseResumeEvent) {
             workflowContext =
                     WorkflowContext.forEvent(
-                            EventType.ON_PROCESS_RESUME, this, workflowInfo.getPendExecPath());
+                            EventType.ON_PROCESS_RESUME, this, workflowInfo.get().getPendExecPath());
             invokeEventHandler(EventType.ON_PROCESS_RESUME, workflowContext);
         }
 
-        if (workflowInfo.getTicket().isEmpty() == false) {
+        if (workflowInfo.get().getTicket().isEmpty() == false) {
             workflowContext =
                     WorkflowContext.forEvent(
-                            EventType.ON_TICKET_RAISED, this, workflowInfo.getPendExecPath());
+                            EventType.ON_TICKET_RAISED, this, workflowInfo.get().getPendExecPath());
             invokeEventHandler(EventType.ON_TICKET_RAISED, workflowContext);
         }
 
@@ -593,42 +621,42 @@ public class RuntimeService {
             throw new WorkflowRuntimeException(
                     "Could not resume case. No process definition found. Case id -> " + caseId);
         }
-        workflowDefinition = dao.get(WorkflowDefinition.class, key);
-        workflowInfo = WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition);
-        workflowInfo.isPendAtSameStep = false;
+        workflowDefinition.set(dao.get(WorkflowDefinition.class, key));
+        workflowInfo.set(WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition.get()));
+        workflowInfo.get().isPendAtSameStep = false;
 
         // uworkflowDefinitionate process variables. We will add or uworkflowDefinitionate the ones
         // passed in but not delete any
         if (pvs != null) {
             List<WorkflowVariable> list = pvs.getListOfWorkflowVariable();
             for (WorkflowVariable pv : list) {
-                workflowInfo.setWorkflowVariable(pv);
+                workflowInfo.get().setWorkflowVariable(pv);
             }
         }
 
         key = JOURNEY_SLA + SEP + caseId;
-        sla = dao.get(List.class, key);
+        sla.set(dao.get(List.class, key));
 
         // check that the case should be completed
-        if (workflowInfo.isCaseCompleted() == false) {
+        if (workflowInfo.get().isCaseCompleted() == false) {
             throw new WorkflowRuntimeException(
                     "Case id " + caseId + "-> cannot reopen a case which has not yet completed");
         }
 
         // uworkflowDefinitionate relevant fields in the process info
-        workflowInfo.getSetter().setPendExecPath(".");
-        workflowInfo.setCaseCompleted(false);
-        ExecPath ep = workflowInfo.getExecPath(".");
+        workflowInfo.get().getSetter().setPendExecPath(".");
+        workflowInfo.get().setCaseCompleted(false);
+        ExecPath ep = workflowInfo.get().getExecPath(".");
         if (pendBeforeResume == true) {
             ep.setPendWorkBasket(pendWb);
             ep.setStepResponseType(StepResponseType.OK_PEND);
         }
         ep.setTicket(ticket);
-        workflowInfo.getSetter().setTicket(ticket);
+        workflowInfo.get().getSetter().setTicket(ticket);
 
         // write back the process info
-        workflowInfo.setHibid(null);
-        dao.saveOrUpdate(WORKFLOW_INFO + SEP + caseId, workflowInfo);
+        workflowInfo.get().setHibid(null);
+        dao.saveOrUpdate(WORKFLOW_INFO + SEP + caseId, workflowInfo.get());
 
         WorkflowContext workflowContext = null;
 
@@ -653,44 +681,44 @@ public class RuntimeService {
         switch (event) {
             case ON_PROCESS_START:
                 {
-                    SlaQueueService.enqueueCaseStartMilestones(workflowContext, sla, slaQm);
+                    SlaQueueService.enqueueCaseStartMilestones(workflowContext, sla.get(), slaQm);
                     break;
                 }
 
             case ON_PROCESS_REOPEN:
                 {
-                    SlaQueueService.enqueueCaseRestartMilestones(workflowContext, sla, slaQm);
+                    SlaQueueService.enqueueCaseRestartMilestones(workflowContext, sla.get(), slaQm);
                     break;
                 }
 
             case ON_PROCESS_PEND:
                 {
-                    ExecPath ep = workflowInfo.getExecPath(workflowInfo.getPendExecPath());
+                    ExecPath ep = workflowInfo.get().getExecPath(workflowInfo.get().getPendExecPath());
                     String prevPendWorkBasket = ep.getPrevPendWorkBasket();
                     String pendWorkBasket = ep.getPendWorkBasket();
                     String tbcWorkBasket = ep.getTbcSlaWorkBasket();
 
-                    if (workflowInfo.isPendAtSameStep == false) {
+                    if (workflowInfo.get().isPendAtSameStep == false) {
                         if (prevPendWorkBasket.equals(tbcWorkBasket)) {
                             SlaQueueService.dequeueWorkBasketMilestones(
-                                    workflowContext, prevPendWorkBasket, sla, slaQm);
+                                    workflowContext, prevPendWorkBasket, sla.get(), slaQm);
                         } else {
                             SlaQueueService.dequeueWorkBasketMilestones(
-                                    workflowContext, prevPendWorkBasket, sla, slaQm);
+                                    workflowContext, prevPendWorkBasket, sla.get(), slaQm);
                             SlaQueueService.dequeueWorkBasketMilestones(
-                                    workflowContext, tbcWorkBasket, sla, slaQm);
+                                    workflowContext, tbcWorkBasket, sla.get(), slaQm);
                         }
                         SlaQueueService.enqueueWorkBasketMilestones(
                                 workflowContext,
                                 Setup.work_basket_exit,
                                 prevPendWorkBasket,
-                                sla,
+                                sla.get(),
                                 slaQm);
                         SlaQueueService.enqueueWorkBasketMilestones(
                                 workflowContext,
                                 Setup.work_basket_entry,
                                 pendWorkBasket,
-                                sla,
+                                sla.get(),
                                 slaQm);
                         ep.setTbcSlaWorkBasket("");
                         break;
@@ -705,65 +733,65 @@ public class RuntimeService {
                                         workflowContext,
                                         Setup.work_basket_entry,
                                         pendWorkBasket,
-                                        sla,
+                                        sla.get(),
                                         slaQm);
                             } else {
                                 SlaQueueService.dequeueWorkBasketMilestones(
-                                        workflowContext, prevPendWorkBasket, sla, slaQm);
+                                        workflowContext, prevPendWorkBasket, sla.get(), slaQm);
                                 SlaQueueService.enqueueWorkBasketMilestones(
                                         workflowContext,
                                         Setup.work_basket_exit,
                                         prevPendWorkBasket,
-                                        sla,
+                                        sla.get(),
                                         slaQm);
                                 SlaQueueService.enqueueWorkBasketMilestones(
                                         workflowContext,
                                         Setup.work_basket_entry,
                                         pendWorkBasket,
-                                        sla,
+                                        sla.get(),
                                         slaQm);
                             }
                         } else if (ep.getStepResponseType() == StepResponseType.OK_PEND_EOR) {
                             if (prevPendWorkBasket.equals(tbcWorkBasket)) {
                                 SlaQueueService.dequeueWorkBasketMilestones(
-                                        workflowContext, prevPendWorkBasket, sla, slaQm);
+                                        workflowContext, prevPendWorkBasket, sla.get(), slaQm);
                                 SlaQueueService.enqueueWorkBasketMilestones(
                                         workflowContext,
                                         Setup.work_basket_exit,
                                         prevPendWorkBasket,
-                                        sla,
+                                        sla.get(),
                                         slaQm);
                                 SlaQueueService.enqueueWorkBasketMilestones(
                                         workflowContext,
                                         Setup.work_basket_entry,
                                         pendWorkBasket,
-                                        sla,
+                                        sla.get(),
                                         slaQm);
                                 ep.setTbcSlaWorkBasket(pendWorkBasket);
                             } else {
                                 SlaQueueService.dequeueWorkBasketMilestones(
-                                        workflowContext, prevPendWorkBasket, sla, slaQm);
+                                        workflowContext, prevPendWorkBasket, sla.get(), slaQm);
                                 SlaQueueService.enqueueWorkBasketMilestones(
                                         workflowContext,
                                         Setup.work_basket_exit,
                                         prevPendWorkBasket,
-                                        sla,
+                                        sla.get(),
                                         slaQm);
 
                                 if (pendWorkBasket.equals(tbcWorkBasket) == false) {
                                     SlaQueueService.dequeueWorkBasketMilestones(
-                                            workflowContext, tbcWorkBasket, sla, slaQm);
+                                            workflowContext, tbcWorkBasket, sla.get(), slaQm);
                                     SlaQueueService.enqueueWorkBasketMilestones(
                                             workflowContext,
                                             Setup.work_basket_exit,
                                             tbcWorkBasket,
-                                            sla,
+                                            sla.get(),
                                             slaQm);
                                     SlaQueueService.enqueueWorkBasketMilestones(
                                             workflowContext,
                                             Setup.work_basket_entry,
                                             pendWorkBasket,
-                                            sla,
+                                            sla.get(),
                                             slaQm);
                                     ep.setTbcSlaWorkBasket(pendWorkBasket);
                                 } else {
@@ -782,7 +810,7 @@ public class RuntimeService {
 
             case ON_PROCESS_RESUME:
                 {
-                    ExecPath ep = workflowInfo.getExecPath(workflowInfo.getPendExecPath());
+                    ExecPath ep = workflowInfo.get().getExecPath(workflowInfo.get().getPendExecPath());
                     String pendWorkBasket = ep.getPendWorkBasket();
                     StepResponseType urt = ep.getStepResponseType();
                     if (urt == StepResponseType.OK_PEND_EOR) {
@@ -804,7 +832,7 @@ public class RuntimeService {
      * @return the {@link WorkflowDefinition} containing workflow structure and configuration
      */
     public WorkflowDefinition getWorkflowDefinition() {
-        return workflowDefinition;
+        return workflowDefinition.get();
     }
 
     /**
@@ -813,7 +841,7 @@ public class RuntimeService {
      * @return the {@link WorkflowInfo} containing current execution state and variables
      */
     public WorkflowInfo getWorkflowInfo() {
-        return workflowInfo;
+        return workflowInfo.get();
     }
 
     /**
