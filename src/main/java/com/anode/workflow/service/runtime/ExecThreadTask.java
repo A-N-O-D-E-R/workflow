@@ -51,8 +51,18 @@ public class ExecThreadTask implements Runnable {
     private boolean writeAuditLog = true;
 
     protected ExecThreadTask(RuntimeService rts) {
+        // Try to get from ThreadLocal first (for root thread)
+        // If null, this means we're in a child thread, so we should not create this way
         this.workflowDefinition = rts.workflowDefinition.get();
         this.workflowInfo = rts.workflowInfo.get();
+        this.rts = rts;
+    }
+
+    // Constructor for child threads - takes explicit workflow definition and info
+    protected ExecThreadTask(
+            RuntimeService rts, WorkflowDefinition workflowDefinition, WorkflowInfo workflowInfo) {
+        this.workflowDefinition = workflowDefinition;
+        this.workflowInfo = workflowInfo;
         this.rts = rts;
     }
 
@@ -976,7 +986,8 @@ public class ExecThreadTask implements Runnable {
                     new ExecPath(
                             parentExecPath.getName() + route.getName() + "." + branchName + ".");
             ep.setStep(workflowDefinition.getStep(next).getName());
-            ExecThreadTask in = new ExecThreadTask(rts);
+            // Use new constructor that passes workflow state explicitly for thread safety
+            ExecThreadTask in = new ExecThreadTask(rts, workflowDefinition, workflowInfo);
             in.execPath = ep;
             tasks[i] = in;
             workflowInfo.setExecPath(ep);

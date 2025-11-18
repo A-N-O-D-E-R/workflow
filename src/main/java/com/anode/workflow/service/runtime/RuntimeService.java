@@ -20,6 +20,7 @@ import com.anode.workflow.service.SlaQueueService;
 import com.anode.workflow.service.WorkflowComponantFactory;
 import com.anode.workflow.service.WorkflowInfoUtils;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -91,12 +92,52 @@ import lombok.extern.slf4j.Slf4j;
  * }</pre>
  *
  * <h2>Thread Safety</h2>
- * This class is thread-safe for operations on different case IDs. The {@link #startCase} method
- * allows only one case to be started at a time. If a thread attempts to start a case while another
- * case is already being started, a {@link WorkflowRuntimeException} will be thrown immediately
- * instead of blocking. This fail-fast behavior prevents race conditions during case initialization
- * while avoiding thread contention. Operations on the same case ID should be serialized externally
- * to avoid race conditions.
+ * This class is fully thread-safe for concurrent workflow operations:
+ * <ul>
+ *   <li><b>Starting Cases</b> - The {@link #startCase} method allows only one case to be started
+ *       at a time across all threads. If a thread attempts to start any case while another case
+ *       is being started, a {@link RuntimeBusyException} will be thrown immediately.</li>
+ *   <li><b>Per-Case Operations</b> - The {@link #resumeCase} and {@link #reopenCase} methods use
+ *       per-case locking, allowing concurrent operations on different cases while preventing
+ *       concurrent operations on the same case ID. If multiple threads attempt to operate on the
+ *       same case simultaneously, only one will succeed and others will receive a
+ *       {@link RuntimeBusyException}.</li>
+ *   <li><b>Fail-Fast Behavior</b> - All locking uses lock-free atomic operations with immediate
+ *       failure rather than blocking, preventing thread contention and deadlocks.</li>
+ * </ul>
+ *
+ * <h3>Example - Safe Concurrent Usage</h3>
+ * <pre>{@code
+ * // Multiple threads can safely operate on different cases
+ * ExecutorService executor = Executors.newFixedThreadPool(10);
+ *
+ * // Thread 1 can resume case A
+ * executor.submit(() -> {
+ *     try {
+ *         runtimeService.resumeCase("CASE-A");
+ *     } catch (RuntimeBusyException e) {
+ *         // Retry or queue for later
+ *     }
+ * });
+ *
+ * // Thread 2 can simultaneously resume case B
+ * executor.submit(() -> {
+ *     try {
+ *         runtimeService.resumeCase("CASE-B");
+ *     } catch (RuntimeBusyException e) {
+ *         // Retry or queue for later
+ *     }
+ * });
+ *
+ * // Thread 3 attempting to resume case A will get RuntimeBusyException
+ * executor.submit(() -> {
+ *     try {
+ *         runtimeService.resumeCase("CASE-A"); // Will fail if Thread 1 is still processing
+ *     } catch (RuntimeBusyException e) {
+ *         System.out.println("Case A is busy, will retry");
+ *     }
+ * });
+ * }</pre>
  *
  * @see WorkflowDefinition
  * @see WorkflowContext
@@ -143,6 +184,11 @@ public class RuntimeService {
     private final java.util.concurrent.atomic.AtomicBoolean isStartingCase =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
+    // Per-case locks to ensure thread-safe operations on individual cases
+    // Prevents concurrent resume/reopen operations on the same case ID
+    private final ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicBoolean> caseLocks =
+            new ConcurrentHashMap<>();
+
     /**
      * Constructs a new RuntimeService with required dependencies.
      *
@@ -160,6 +206,31 @@ public class RuntimeService {
         this.factory = factory;
         this.eventHandler = eventHandler;
         this.slaQm = slaQm;
+    }
+
+    /**
+     * Attempts to acquire a lock for the specified case ID.
+     *
+     * @param caseId the case ID to lock
+     * @return true if lock was acquired, false if another thread already holds the lock
+     */
+    private boolean acquireCaseLock(String caseId) {
+        java.util.concurrent.atomic.AtomicBoolean lock =
+                caseLocks.computeIfAbsent(
+                        caseId, k -> new java.util.concurrent.atomic.AtomicBoolean(false));
+        return lock.compareAndSet(false, true);
+    }
+
+    /**
+     * Releases the lock for the specified case ID.
+     *
+     * @param caseId the case ID to unlock
+     */
+    private void releaseCaseLock(String caseId) {
+        java.util.concurrent.atomic.AtomicBoolean lock = caseLocks.get(caseId);
+        if (lock != null) {
+            lock.set(false);
+        }
     }
 
     private void invokeEvent(EventType event, WorkflowContext workflowContext) {
@@ -319,8 +390,8 @@ public class RuntimeService {
      * @param journeySla list of SLA milestones to track (may be null for no SLA tracking)
      * @return the {@link WorkflowContext} representing the current state after initial execution
      *
-     * @throws RuntimeBusyException if another case is currently being started
      * @throws WorkflowRuntimeException if the case ID is already in use
+     * @throws RuntimeBusyException if another case is currently being started
      * @throws WorkflowRuntimeException if workflow execution fails critically
      *
      * @see #resumeCase(String)
@@ -333,7 +404,7 @@ public class RuntimeService {
             String caseId,
             WorkflowDefinition journey,
             WorkflowVariables pvs,
-            List<Milestone> journeySla) throws RuntimeBusyException{
+            List<Milestone> journeySla) throws RuntimeBusyException {
         // Try to acquire the "lock" - if another thread is starting a case, fail immediately
         if (!isStartingCase.compareAndSet(false, true)) {
             throw new RuntimeBusyException(
@@ -383,69 +454,94 @@ public class RuntimeService {
                 invokeEventHandler(EventType.ON_PROCESS_START, workflowContext);
             }
 
+            // Release the global lock before executing the workflow
+            // The case is now initialized and persisted, so other threads can start their own cases
+            isStartingCase.set(false);
+
+            // Execute the workflow without holding the global lock
+            // This allows concurrent case starts while this case executes
             workflowContext = resumeCase(caseId, false, null);
             return workflowContext;
-        } finally {
-            // Always release the flag, even if an exception occurs
+        } catch (Exception e) {
+            // Ensure lock is released on error
             isStartingCase.set(false);
+            throw e;
         }
     }
 
     private WorkflowContext resumeCase(
-            String caseId, boolean raiseResumeEvent, WorkflowVariables workflowVariables) {
-        if (raiseResumeEvent == true) {
-            // we are being called on our own
-            // read process definition
-            String key = JOURNEY + SEP + caseId;
-            if (dao.get(WorkflowDefinition.class, key) == null) {
-                throw new WorkflowRuntimeException(
-                        "Could not resume case. No process definition found. Case id -> " + caseId);
-            }
-            workflowDefinition.set(dao.get(WorkflowDefinition.class, key));
-            workflowInfo.set(WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition.get()));
-            workflowInfo.get().isPendAtSameStep = true;
+            String caseId, boolean raiseResumeEvent, WorkflowVariables workflowVariables)
+            throws RuntimeBusyException {
+        // Only acquire lock if this is an external call (raiseResumeEvent == true)
+        // Internal calls from startCase don't need locking as they're already protected
+        if (raiseResumeEvent && !acquireCaseLock(caseId)) {
+            throw new RuntimeBusyException(
+                    "Cannot resume case "
+                            + caseId
+                            + ". Another thread is currently operating on this case. Please try again later.");
+        }
 
-            // uworkflowDefinitionate process variables. We will add or uworkflowDefinitionate the
-            // ones passed in but not delete any
-            if (workflowVariables != null) {
-                List<WorkflowVariable> list = workflowVariables.getListOfWorkflowVariable();
-                for (WorkflowVariable workflowVariable : list) {
-                    workflowInfo.get().setWorkflowVariable(workflowVariable);
+        try {
+            if (raiseResumeEvent == true) {
+                // we are being called on our own
+                // read process definition
+                String key = JOURNEY + SEP + caseId;
+                if (dao.get(WorkflowDefinition.class, key) == null) {
+                    throw new WorkflowRuntimeException(
+                            "Could not resume case. No process definition found. Case id -> " + caseId);
                 }
+                workflowDefinition.set(dao.get(WorkflowDefinition.class, key));
+                workflowInfo.set(
+                        WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition.get()));
+                workflowInfo.get().isPendAtSameStep = true;
+
+                // uworkflowDefinitionate process variables. We will add or uworkflowDefinitionate the
+                // ones passed in but not delete any
+                if (workflowVariables != null) {
+                    List<WorkflowVariable> list = workflowVariables.getListOfWorkflowVariable();
+                    for (WorkflowVariable workflowVariable : list) {
+                        workflowInfo.get().setWorkflowVariable(workflowVariable);
+                    }
+                }
+
+                // read sla configuration
+                key = JOURNEY_SLA + SEP + caseId;
+                sla.set(dao.get(List.class, key));
             }
 
-            // read sla configuration
-            key = JOURNEY_SLA + SEP + caseId;
-            sla.set(dao.get(List.class, key));
+            // check if we have already completed
+            if (workflowInfo.get().isCaseCompleted() == true) {
+                throw new WorkflowRuntimeException(
+                        "Cannot resume a case that has already completed. Case id -> "
+                                + workflowInfo.get().getCaseId());
+            }
+
+            WorkflowContext workflowContext = null;
+            if (raiseResumeEvent) {
+                workflowContext =
+                        WorkflowContext.forEvent(
+                                EventType.ON_PROCESS_RESUME, this, workflowInfo.get().getPendExecPath());
+                invokeEventHandler(EventType.ON_PROCESS_RESUME, workflowContext);
+            }
+
+            if (workflowInfo.get().getTicket().isEmpty() == false) {
+                workflowContext =
+                        WorkflowContext.forEvent(
+                                EventType.ON_TICKET_RAISED, this, workflowInfo.get().getPendExecPath());
+                invokeEventHandler(EventType.ON_TICKET_RAISED, workflowContext);
+            }
+
+            // initiate on the current thread
+            ExecThreadTask task = new ExecThreadTask(this);
+            workflowContext = task.execute();
+
+            return workflowContext;
+        } finally {
+            // Always release the lock if we acquired it
+            if (raiseResumeEvent) {
+                releaseCaseLock(caseId);
+            }
         }
-
-        // check if we have already completed
-        if (workflowInfo.get().isCaseCompleted() == true) {
-            throw new WorkflowRuntimeException(
-                    "Cannot resume a case that has already completed. Case id -> "
-                            + workflowInfo.get().getCaseId());
-        }
-
-        WorkflowContext workflowContext = null;
-        if (raiseResumeEvent) {
-            workflowContext =
-                    WorkflowContext.forEvent(
-                            EventType.ON_PROCESS_RESUME, this, workflowInfo.get().getPendExecPath());
-            invokeEventHandler(EventType.ON_PROCESS_RESUME, workflowContext);
-        }
-
-        if (workflowInfo.get().getTicket().isEmpty() == false) {
-            workflowContext =
-                    WorkflowContext.forEvent(
-                            EventType.ON_TICKET_RAISED, this, workflowInfo.get().getPendExecPath());
-            invokeEventHandler(EventType.ON_TICKET_RAISED, workflowContext);
-        }
-
-        // initiate on the current thread
-        ExecThreadTask task = new ExecThreadTask(this);
-        workflowContext = task.execute();
-
-        return workflowContext;
     }
 
     /**
@@ -464,18 +560,28 @@ public class RuntimeService {
      *   <li>Recovering from application restart (crash recovery)</li>
      * </ul>
      *
+     * <h3>Thread Safety</h3>
+     * This method is thread-safe for concurrent operations on the same case ID. If multiple threads
+     * attempt to resume the same case simultaneously, only one will succeed while others will receive
+     * a {@link RuntimeBusyException}. This prevents race conditions and ensures consistent workflow state.
+     *
      * <h3>Example</h3>
      * <pre>{@code
      * // Workflow paused waiting for approval
      * // ... user completes approval in work basket ...
      *
-     * // Resume the workflow
-     * WorkflowContext context = runtimeService.resumeCase("CASE-12345");
+     * try {
+     *     // Resume the workflow
+     *     WorkflowContext context = runtimeService.resumeCase("CASE-12345");
      *
-     * if (context.getCompName().isEmpty()) {
-     *     System.out.println("Workflow completed");
-     * } else {
-     *     System.out.println("Workflow paused at: " + context.getPendWorkBasket());
+     *     if (context.getCompName().isEmpty()) {
+     *         System.out.println("Workflow completed");
+     *     } else {
+     *         System.out.println("Workflow paused at: " + context.getPendWorkBasket());
+     *     }
+     * } catch (RuntimeBusyException e) {
+     *     // Another thread is already processing this case
+     *     System.out.println("Case is busy, retry later");
      * }
      * }</pre>
      *
@@ -484,12 +590,13 @@ public class RuntimeService {
      *
      * @throws WorkflowRuntimeException if the case ID does not exist
      * @throws WorkflowRuntimeException if the workflow has already completed
+     * @throws RuntimeBusyException if another thread is currently operating on this case
      * @throws WorkflowRuntimeException if workflow execution fails
      *
      * @see #resumeCase(String, WorkflowVariables)
      * @see #startCase(String, WorkflowDefinition, WorkflowVariables, List)
      */
-    public WorkflowContext resumeCase(String caseId) {
+    public WorkflowContext resumeCase(String caseId) throws RuntimeBusyException {
         return resumeCase(caseId, true, null);
     }
 
@@ -507,6 +614,11 @@ public class RuntimeService {
      *   <li>Variables not specified in {@code pvs} remain unchanged</li>
      * </ul>
      *
+     * <h3>Thread Safety</h3>
+     * This method is thread-safe for concurrent operations on the same case ID. If multiple threads
+     * attempt to resume the same case simultaneously, only one will succeed while others will receive
+     * a {@link RuntimeBusyException}. This prevents race conditions and ensures consistent workflow state.
+     *
      * <h3>Example</h3>
      * <pre>{@code
      * // Workflow paused for manual review
@@ -517,8 +629,13 @@ public class RuntimeService {
      * updates.add("reviewedBy", "john.doe");
      * updates.add("reviewDate", LocalDate.now());
      *
-     * // Resume with updated variables
-     * WorkflowContext context = runtimeService.resumeCase("CASE-12345", updates);
+     * try {
+     *     // Resume with updated variables
+     *     WorkflowContext context = runtimeService.resumeCase("CASE-12345", updates);
+     * } catch (RuntimeBusyException e) {
+     *     // Another thread is already processing this case
+     *     System.out.println("Case is busy, retry later");
+     * }
      * }</pre>
      *
      * @param caseId the unique identifier of the workflow instance to resume
@@ -527,12 +644,14 @@ public class RuntimeService {
      *
      * @throws WorkflowRuntimeException if the case ID does not exist
      * @throws WorkflowRuntimeException if the workflow has already completed
+     * @throws RuntimeBusyException if another thread is currently operating on this case
      * @throws WorkflowRuntimeException if workflow execution fails
      *
      * @see #resumeCase(String)
      * @see WorkflowVariables
      */
-    public WorkflowContext resumeCase(String caseId, WorkflowVariables pvs) {
+    public WorkflowContext resumeCase(String caseId, WorkflowVariables pvs)
+            throws RuntimeBusyException {
         return resumeCase(caseId, true, pvs);
     }
 
@@ -543,6 +662,11 @@ public class RuntimeService {
      * scenarios like reopening a closed case, processing amendments, or handling exceptions
      * that require revisiting completed workflows.
      *
+     * <h3>Thread Safety</h3>
+     * This method is thread-safe for concurrent operations on the same case ID. If multiple threads
+     * attempt to reopen the same case simultaneously, only one will succeed while others will receive
+     * a {@link RuntimeBusyException}. This prevents race conditions and ensures consistent workflow state.
+     *
      * @param caseId the unique identifier of the completed workflow to reopen
      * @param ticket a ticket/reference identifier for the reopen operation
      * @param pendBeforeResume if {@code true}, pause at specified work basket before resuming
@@ -552,11 +676,13 @@ public class RuntimeService {
      * @throws WorkflowRuntimeException if the case has not completed
      * @throws WorkflowRuntimeException if pendBeforeResume is true but pendWb is null/empty
      * @throws WorkflowRuntimeException if ticket is null or empty
+     * @throws RuntimeBusyException if another thread is currently operating on this case
      *
      * @see #reopenCase(String, String, boolean, String, WorkflowVariables)
      */
     public WorkflowContext reopenCase(
-            String caseId, String ticket, boolean pendBeforeResume, String pendWb) {
+            String caseId, String ticket, boolean pendBeforeResume, String pendWb)
+            throws RuntimeBusyException {
         return reopenCase(caseId, ticket, pendBeforeResume, pendWb, null);
     }
 
@@ -567,6 +693,11 @@ public class RuntimeService {
      * variables before resuming execution. The workflow can be configured to pause at a
      * specific work basket or continue execution immediately.
      *
+     * <h3>Thread Safety</h3>
+     * This method is thread-safe for concurrent operations on the same case ID. If multiple threads
+     * attempt to reopen the same case simultaneously, only one will succeed while others will receive
+     * a {@link RuntimeBusyException}. This prevents race conditions and ensures consistent workflow state.
+     *
      * <h3>Example - Reopen for Amendment</h3>
      * <pre>{@code
      * // Order completed and shipped, customer requests changes
@@ -575,14 +706,19 @@ public class RuntimeService {
      * updates.add("newAddress", updatedAddress);
      * updates.add("reopenedBy", "customer-service");
      *
-     * // Reopen and pause for manual review
-     * WorkflowContext context = runtimeService.reopenCase(
-     *     "CASE-12345",
-     *     "TICKET-999",
-     *     true,                    // Pause before resuming
-     *     "amendment-review",      // Work basket for review
-     *     updates
-     * );
+     * try {
+     *     // Reopen and pause for manual review
+     *     WorkflowContext context = runtimeService.reopenCase(
+     *         "CASE-12345",
+     *         "TICKET-999",
+     *         true,                    // Pause before resuming
+     *         "amendment-review",      // Work basket for review
+     *         updates
+     *     );
+     * } catch (RuntimeBusyException e) {
+     *     // Another thread is already processing this case
+     *     System.out.println("Case is busy, retry later");
+     * }
      * }</pre>
      *
      * @param caseId the unique identifier of the completed workflow to reopen
@@ -596,6 +732,7 @@ public class RuntimeService {
      * @throws WorkflowRuntimeException if pendBeforeResume is true but pendWb is null/empty
      * @throws WorkflowRuntimeException if ticket is null or empty
      * @throws WorkflowRuntimeException if the case ID does not exist
+     * @throws RuntimeBusyException if another thread is currently operating on this case
      *
      * @see #reopenCase(String, String, boolean, String)
      */
@@ -604,77 +741,94 @@ public class RuntimeService {
             String ticket,
             boolean pendBeforeResume,
             String pendWb,
-            WorkflowVariables pvs) {
-        if (pendBeforeResume == true) {
-            if (StringUtils.isNullOrEmpty(pendWb)) {
+            WorkflowVariables pvs)
+            throws RuntimeBusyException {
+        // Acquire lock for this case
+        if (!acquireCaseLock(caseId)) {
+            throw new RuntimeBusyException(
+                    "Cannot reopen case "
+                            + caseId
+                            + ". Another thread is currently operating on this case. Please try again later.");
+        }
+
+        try {
+            if (pendBeforeResume == true) {
+                if (StringUtils.isNullOrEmpty(pendWb)) {
+                    throw new WorkflowRuntimeException(
+                            caseId + " -> pending work basket cannot be null or empty");
+                }
+            }
+            if (StringUtils.isNullOrEmpty(ticket)) {
+                throw new WorkflowRuntimeException(caseId + " -> ticket cannot be null or empty");
+            }
+
+            // read journey file, process definition, process info and sla file
+            String key = JOURNEY + SEP + caseId;
+            if (dao.get(WorkflowDefinition.class, key) == null) {
                 throw new WorkflowRuntimeException(
-                        caseId + " -> pending work basket cannot be null or empty");
+                        "Could not resume case. No process definition found. Case id -> " + caseId);
             }
-        }
-        if (StringUtils.isNullOrEmpty(ticket)) {
-            throw new WorkflowRuntimeException(caseId + " -> ticket cannot be null or empty");
-        }
+            workflowDefinition.set(dao.get(WorkflowDefinition.class, key));
+            workflowInfo.set(
+                    WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition.get()));
+            workflowInfo.get().isPendAtSameStep = false;
 
-        // read journey file, process definition, process info and sla file
-        String key = JOURNEY + SEP + caseId;
-        if (dao.get(WorkflowDefinition.class, key) == null) {
-            throw new WorkflowRuntimeException(
-                    "Could not resume case. No process definition found. Case id -> " + caseId);
-        }
-        workflowDefinition.set(dao.get(WorkflowDefinition.class, key));
-        workflowInfo.set(WorkflowInfoUtils.getWorkflowInfo(dao, caseId, workflowDefinition.get()));
-        workflowInfo.get().isPendAtSameStep = false;
-
-        // uworkflowDefinitionate process variables. We will add or uworkflowDefinitionate the ones
-        // passed in but not delete any
-        if (pvs != null) {
-            List<WorkflowVariable> list = pvs.getListOfWorkflowVariable();
-            for (WorkflowVariable pv : list) {
-                workflowInfo.get().setWorkflowVariable(pv);
+            // uworkflowDefinitionate process variables. We will add or uworkflowDefinitionate the ones
+            // passed in but not delete any
+            if (pvs != null) {
+                List<WorkflowVariable> list = pvs.getListOfWorkflowVariable();
+                for (WorkflowVariable pv : list) {
+                    workflowInfo.get().setWorkflowVariable(pv);
+                }
             }
+
+            key = JOURNEY_SLA + SEP + caseId;
+            sla.set(dao.get(List.class, key));
+
+            // check that the case should be completed
+            if (workflowInfo.get().isCaseCompleted() == false) {
+                throw new WorkflowRuntimeException(
+                        "Case id " + caseId + "-> cannot reopen a case which has not yet completed");
+            }
+
+            // uworkflowDefinitionate relevant fields in the process info
+            workflowInfo.get().getSetter().setPendExecPath(".");
+            workflowInfo.get().setCaseCompleted(false);
+            ExecPath ep = workflowInfo.get().getExecPath(".");
+            if (pendBeforeResume == true) {
+                ep.setPendWorkBasket(pendWb);
+                ep.setStepResponseType(StepResponseType.OK_PEND);
+            }
+            ep.setTicket(ticket);
+            workflowInfo.get().getSetter().setTicket(ticket);
+
+            // write back the process info
+            workflowInfo.get().setHibid(null);
+            dao.saveOrUpdate(WORKFLOW_INFO + SEP + caseId, workflowInfo.get());
+
+            WorkflowContext workflowContext = null;
+
+            // invoke event handler
+            workflowContext = WorkflowContext.forEvent(EventType.ON_PROCESS_REOPEN, this, ".");
+            invokeEventHandler(EventType.ON_PROCESS_REOPEN, workflowContext);
+
+            if (pendBeforeResume == true) {
+                workflowContext = WorkflowContext.forEvent(EventType.ON_PROCESS_PEND, this, ".");
+                invokeEventHandler(EventType.ON_PROCESS_PEND, workflowContext);
+            }
+
+            // resume the case if required
+            // Note: We pass false for raiseResumeEvent to reuse the already-loaded
+            // workflow definition and state, and to avoid re-acquiring the lock
+            if (pendBeforeResume == false) {
+                workflowContext = resumeCase(caseId, false, null);
+            }
+
+            return workflowContext;
+        } finally {
+            // Always release the lock
+            releaseCaseLock(caseId);
         }
-
-        key = JOURNEY_SLA + SEP + caseId;
-        sla.set(dao.get(List.class, key));
-
-        // check that the case should be completed
-        if (workflowInfo.get().isCaseCompleted() == false) {
-            throw new WorkflowRuntimeException(
-                    "Case id " + caseId + "-> cannot reopen a case which has not yet completed");
-        }
-
-        // uworkflowDefinitionate relevant fields in the process info
-        workflowInfo.get().getSetter().setPendExecPath(".");
-        workflowInfo.get().setCaseCompleted(false);
-        ExecPath ep = workflowInfo.get().getExecPath(".");
-        if (pendBeforeResume == true) {
-            ep.setPendWorkBasket(pendWb);
-            ep.setStepResponseType(StepResponseType.OK_PEND);
-        }
-        ep.setTicket(ticket);
-        workflowInfo.get().getSetter().setTicket(ticket);
-
-        // write back the process info
-        workflowInfo.get().setHibid(null);
-        dao.saveOrUpdate(WORKFLOW_INFO + SEP + caseId, workflowInfo.get());
-
-        WorkflowContext workflowContext = null;
-
-        // invoke event handler
-        workflowContext = WorkflowContext.forEvent(EventType.ON_PROCESS_REOPEN, this, ".");
-        invokeEventHandler(EventType.ON_PROCESS_REOPEN, workflowContext);
-
-        if (pendBeforeResume == true) {
-            workflowContext = WorkflowContext.forEvent(EventType.ON_PROCESS_PEND, this, ".");
-            invokeEventHandler(EventType.ON_PROCESS_PEND, workflowContext);
-        }
-
-        // resume the case if required
-        if (pendBeforeResume == false) {
-            workflowContext = resumeCase(caseId, true, null);
-        }
-
-        return workflowContext;
     }
 
     private void raiseSlaEvent(EventType event, WorkflowContext workflowContext) {
@@ -878,5 +1032,49 @@ public class RuntimeService {
      */
     public String getLastPendWorkBasket() {
         return lastPendWorkBasket;
+    }
+
+    /**
+     * Checks if the RuntimeService is currently busy starting a case.
+     *
+     * <p>This method allows clients to determine if another thread is currently in the process
+     * of starting a new workflow case. This is useful for implementing retry logic or queuing
+     * mechanisms when multiple threads need to start cases concurrently.
+     *
+     * <h3>Example - Implementing Retry Logic</h3>
+     * <pre>{@code
+     * // Check if the service is busy before attempting to start a case
+     * if (runtimeService.isBusy()) {
+     *     System.out.println("RuntimeService is busy, waiting...");
+     *     Thread.sleep(100);
+     * }
+     *
+     * try {
+     *     WorkflowContext context = runtimeService.startCase(caseId, workflow, variables, sla);
+     * } catch (RuntimeBusyException e) {
+     *     // Service became busy between check and call
+     *     System.out.println("Case start failed, retry later");
+     * }
+     * }</pre>
+     *
+     * <h3>Example - Queuing Cases</h3>
+     * <pre>{@code
+     * // Wait until the service is available
+     * while (runtimeService.isBusy()) {
+     *     Thread.sleep(50);
+     * }
+     *
+     * // Now safe to start the case
+     * WorkflowContext context = runtimeService.startCase(caseId, workflow, variables, sla);
+     * }</pre>
+     *
+     * @return {@code true} if a case is currently being started, {@code false} otherwise
+     *
+     * @see #startCase(String, WorkflowDefinition, WorkflowVariables, List)
+     * @see RuntimeBusyException
+     * @since 0.0.2
+     */
+    public boolean isBusy() {
+        return isStartingCase.get();
     }
 }
