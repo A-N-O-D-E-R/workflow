@@ -10,15 +10,19 @@
 
     <name>simple-workflow</name>
     <description>A simple workflow implementation.</description>
-
-   <distributionManagement>
+    <distributionManagement>
         <repository>
             <id>b2-releases</id>
-            <name>B2 Maven Repository - Releases</name>
+            <name>B2 Releases Repository</name>
             <url>b2://A-N-O-D-E-R/maven-releases</url>
         </repository>
+
+        <snapshotRepository>
+            <id>b2-snapshots</id>
+            <name>B2 Snapshots Repository</name>
+            <url>b2://A-N-O-D-E-R/maven-snapshots</url>
+        </snapshotRepository>
     </distributionManagement>
-    
     <properties>
         <spotless.version>2.40.0</spotless.version>
         <hibernate.core.version>6.0.0.Final</hibernate.core.version>
