@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.anode</groupId>
     <artifactId>workflow</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>simple-workflow</name>
@@ -14,7 +14,7 @@
         <connection>scm:git:git://github.com/A-N-O-D-E-R/workflow.git</connection>
         <developerConnection>scm:git:git@github.com:A-N-O-D-E-R/workflow.git</developerConnection>
         <url>https://github.com/A-N-O-D-E-R/workflow</url>
-      <tag>v0.0.2</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <distributionManagement>
