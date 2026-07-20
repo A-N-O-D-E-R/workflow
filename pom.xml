@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.anode</groupId>
+    <groupId>io.github.a-n-o-d-e-r</groupId>
     <artifactId>workflow</artifactId>
     <version>0.0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -17,19 +17,6 @@
       <tag>HEAD</tag>
   </scm>
 
-    <distributionManagement>
-        <repository>
-            <id>b2-releases</id>
-            <name>B2 Releases Repository</name>
-            <url>b2://A-N-O-D-E-R/maven-releases</url>
-        </repository>
-
-        <snapshotRepository>
-            <id>b2-snapshots</id>
-            <name>B2 Snapshots Repository</name>
-            <url>b2://A-N-O-D-E-R/maven-snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
     <properties>
         <spotless.version>2.40.0</spotless.version>
         <hibernate.core.version>6.0.0.Final</hibernate.core.version>
@@ -43,9 +30,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.anode</groupId>
+            <groupId>io.github.a-n-o-d-e-r</groupId>
             <artifactId>tool</artifactId>
-            <version>0.0.2</version>
+            <version>0.0.5</version>
         </dependency>
         <dependency>
             <groupId>jakarta.persistence</groupId>
@@ -137,13 +124,6 @@
     </dependencies>
 
     <build>
-        <extensions>
-            <extension>
-                <groupId>com.anode.maven.wagon</groupId>
-                <artifactId>wagon-b2</artifactId>
-                <version>1.0.0</version>
-            </extension>
-        </extensions>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -265,15 +245,6 @@
                         <formatJavadoc>false</formatJavadoc>
                         </googleJavaFormat>
                     </java>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                    <tagNameFormat>v@{project.version}</tagNameFormat>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
             </plugin>
         </plugins>
