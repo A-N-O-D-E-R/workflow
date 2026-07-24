@@ -10,6 +10,21 @@
     <description>A simple workflow implementation.</description>
     <url>https://github.com/A-N-O-D-E-R/workflow</url>
 
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>a-n-o-d-e-r</id>
+            <name>A-N-O-D-E-R</name>
+            <url>https://github.com/A-N-O-D-E-R</url>
+        </developer>
+    </developers>
+
     <scm>
         <connection>scm:git:git://github.com/A-N-O-D-E-R/workflow.git</connection>
         <developerConnection>scm:git:git@github.com:A-N-O-D-E-R/workflow.git</developerConnection>
