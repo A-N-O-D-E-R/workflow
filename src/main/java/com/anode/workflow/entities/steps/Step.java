@@ -175,7 +175,7 @@ public abstract class Step implements Serializable {
      * <p>Each step type determines how the workflow engine processes the step and
      * what behavior it exhibits during workflow execution.
      *
-     * <h3>Step Type Descriptions</h3>
+     * <h2>Step Type Descriptions</h2>
      * <ul>
      *   <li><b>TASK</b> - Executes business logic by invoking a task component. The task
      *       returns a {@link com.anode.workflow.entities.steps.responses.TaskResponse}

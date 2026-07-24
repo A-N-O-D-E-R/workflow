@@ -92,7 +92,7 @@ import lombok.Setter;
  * <h2>Step Navigation</h2>
  * Steps are connected through their configuration:
  * <ul>
- *   <li>Tasks specify next step via {@link Step#getNext()}</li>
+ *   <li>Tasks specify next step through their configuration</li>
  *   <li>Routes return the name of the next step based on routing logic</li>
  *   <li>Branches create parallel execution paths</li>
  *   <li>Joins synchronize parallel paths before continuing</li>
@@ -168,7 +168,7 @@ public class WorkflowDefinition implements Serializable {
      * <p>Steps are indexed by name for fast lookup during workflow execution. If a step
      * with the same name already exists, it will be replaced.
      *
-     * <h3>Example Usage</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * WorkflowDefinition workflow = new WorkflowDefinition();
      * workflow.setName("orderProcessing");
@@ -204,7 +204,7 @@ public class WorkflowDefinition implements Serializable {
      * <p>This method is called by the workflow engine during execution to look up
      * the next step to execute. Returns null if no step with the given name exists.
      *
-     * <h3>Example Usage</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * WorkflowDefinition definition = commonService.get(
      *     WorkflowDefinition.class,
@@ -235,7 +235,7 @@ public class WorkflowDefinition implements Serializable {
      * workflow execution. The workflow engine uses this method to look up ticket
      * definitions when processing raised tickets.
      *
-     * <h3>Example Usage</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * Ticket approvalTicket = definition.getTicket("APPROVAL_REQUIRED");
      * if (approvalTicket != null) {
@@ -258,7 +258,7 @@ public class WorkflowDefinition implements Serializable {
      * during workflow execution. If a ticket with the same name already exists,
      * it will be replaced.
      *
-     * <h3>Example Usage</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * // Define approval ticket
      * Ticket approvalTicket = new Ticket("APPROVAL_REQUIRED");

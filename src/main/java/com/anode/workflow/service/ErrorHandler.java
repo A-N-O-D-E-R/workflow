@@ -71,7 +71,6 @@ import lombok.NoArgsConstructor;
  * </ul>
  *
  * @see WorkflowRuntimeException
- * @see WorkflowContext#getPendErrorTuple()
  * @since 0.0.1
  */
 @Getter

@@ -81,7 +81,6 @@ import lombok.ToString;
  * Context instances are not thread-safe and should not be shared between threads. Each
  * workflow execution receives its own context instance.
  *
- * @see EventHandler
  * @see WorkflowVariables
  * @see ErrorHandler
  * @since 0.0.1
@@ -217,8 +216,7 @@ public class WorkflowContext {
      * <p>This method constructs a context appropriate for the given event type, populating
      * it with relevant information from the runtime service and current execution state.
      *
-     * <h3>Event-Specific Context Population</h3>
-     * Different event types populate different context fields:
+     * <p><b>Event-Specific Context Population:</b> Different event types populate different context fields:
      * <ul>
      *   <li>{@code ON_PROCESS_START} - Basic journey and case information</li>
      *   <li>{@code ON_PROCESS_PEND} - Includes step, component, and pend work basket info</li>

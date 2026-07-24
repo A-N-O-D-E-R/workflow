@@ -94,8 +94,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * use external synchronization if you need to perform atomic read-modify-write operations.
  *
  * @see WorkflowVariable
- * @see WorkflowContext#getProcessVariables()
- * @see WorkflowInfo#getWorkflowVariables()
+ * @see WorkflowContext
+ * @see WorkflowInfo
  * @since 0.0.1
  */
 public class WorkflowVariables {

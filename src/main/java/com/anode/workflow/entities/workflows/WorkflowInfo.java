@@ -253,7 +253,7 @@ public class WorkflowInfo implements Serializable {
      * variables map. If a variable with the same name already exists, it will be replaced.
      * Variables are shared across all execution paths within this workflow instance.
      *
-     * <h3>Example Usage</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * WorkflowVariable orderIdVar = new WorkflowVariable(
      *     "orderId",
@@ -287,7 +287,7 @@ public class WorkflowInfo implements Serializable {
      * The returned object is a snapshot of the current state and can be safely used for
      * reading variable values.
      *
-     * <h3>Example Usage</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * WorkflowVariables vars = workflowInfo.getWorkflowVariables();
      *
@@ -340,7 +340,7 @@ public class WorkflowInfo implements Serializable {
      * is created when {@link com.anode.workflow.service.runtime.RuntimeService#startCase}
      * is called. A workflow that has been created but not yet started will return {@code false}.
      *
-     * <h3>Example Usage</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * WorkflowInfo workflowInfo = commonService.get(WorkflowInfo.class, caseId);
      *
@@ -367,7 +367,7 @@ public class WorkflowInfo implements Serializable {
      * the final step has been reached. Completed workflows can be reopened using
      * {@link com.anode.workflow.service.runtime.RuntimeService#reopenCase} if needed.
      *
-     * <h3>Example Usage</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * WorkflowInfo workflowInfo = commonService.get(WorkflowInfo.class, caseId);
      *
@@ -438,7 +438,7 @@ public class WorkflowInfo implements Serializable {
      * enable method chaining. This pattern is used internally by the workflow engine
      * during execution.
      *
-     * <h3>Example Usage</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * workflowInfo.getSetter()
      *     .setPendExecPath(".branch1")
@@ -447,8 +447,8 @@ public class WorkflowInfo implements Serializable {
      *     .setLastStepExecuted(currentStep);
      * }</pre>
      *
-     * <h3>Thread Safety</h3>
-     * The setter updates volatile and synchronized fields in the parent {@link WorkflowInfo},
+     * <h2>Thread Safety</h2>
+     * <p>The setter updates volatile and synchronized fields in the parent {@link WorkflowInfo},
      * ensuring visibility across threads. However, the chaining itself is not atomic -
      * external synchronization may be required for consistency across multiple updates.
      */

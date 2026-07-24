@@ -266,7 +266,7 @@ public class RuntimeService {
      * according to their execution paths and order. The workflow may complete immediately
      * or pause at steps requiring human intervention.
      *
-     * <h3>Example</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * // Load workflow definition
      * WorkflowDefinition workflow = WorkflowDefinition.fromJson(jsonString);
@@ -294,8 +294,7 @@ public class RuntimeService {
      * System.out.println("Workflow started: " + context.getCaseId());
      * }</pre>
      *
-     * <h3>Crash Recovery</h3>
-     * If the application crashes after the workflow definition is persisted but before the
+     * <p><b>Crash Recovery:</b> If the application crashes after the workflow definition is persisted but before the
      * first step executes, the next call to {@code startCase} with the same case ID will
      * detect the existing definition and resume execution from the beginning.
      *
@@ -427,8 +426,7 @@ public class RuntimeService {
      * due to a human task or external event requirement. The workflow resumes from the step
      * where it was paused and continues executing subsequent steps.
      *
-     * <h3>When to Use</h3>
-     * Call this method when:
+     * <p><b>When to Use:</b> Call this method when:
      * <ul>
      *   <li>A human task in a work basket has been completed</li>
      *   <li>External data required by the workflow becomes available</li>
@@ -436,7 +434,7 @@ public class RuntimeService {
      *   <li>Recovering from application restart (crash recovery)</li>
      * </ul>
      *
-     * <h3>Example</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * // Workflow paused waiting for approval
      * // ... user completes approval in work basket ...
@@ -472,14 +470,14 @@ public class RuntimeService {
      * process variables before resuming execution. This is useful when external data collected
      * during the pause needs to be injected into the workflow.
      *
-     * <h3>Variable Handling</h3>
+     * <p><b>Variable Handling:</b>
      * <ul>
      *   <li>Existing variables with matching names are updated with new values</li>
      *   <li>New variables are added to the workflow context</li>
      *   <li>Variables not specified in {@code pvs} remain unchanged</li>
      * </ul>
      *
-     * <h3>Example</h3>
+     * <p><b>Example:</b>
      * <pre>{@code
      * // Workflow paused for manual review
      * // Reviewer provides additional information
@@ -539,7 +537,7 @@ public class RuntimeService {
      * variables before resuming execution. The workflow can be configured to pause at a
      * specific work basket or continue execution immediately.
      *
-     * <h3>Example - Reopen for Amendment</h3>
+     * <p><b>Example - Reopen for Amendment:</b>
      * <pre>{@code
      * // Order completed and shipped, customer requests changes
      * WorkflowVariables updates = new WorkflowVariables();

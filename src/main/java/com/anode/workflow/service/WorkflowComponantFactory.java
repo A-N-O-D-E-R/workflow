@@ -99,9 +99,9 @@ public interface WorkflowComponantFactory {
      * component for execution. The {@link WorkflowContext} contains all necessary information
      * to determine which component to create, including:
      * <ul>
-     *   <li>Component name ({@link WorkflowContext#getCompName()})</li>
-     *   <li>Component type ({@link WorkflowContext#getCompType()})</li>
-     *   <li>User-defined data ({@link WorkflowContext#getUserData()})</li>
+     *   <li>Component name</li>
+     *   <li>Component type</li>
+     *   <li>User-defined data</li>
      * </ul>
      *
      * <p><b>Implementation Guidelines:</b>
@@ -117,8 +117,7 @@ public interface WorkflowComponantFactory {
      * @throws IllegalArgumentException if the requested component name or type is not recognized
      * @throws RuntimeException if component instantiation fails
      *
-     * @see WorkflowContext#getCompName() for retrieving the component name
-     * @see WorkflowContext#getCompType() for retrieving the component type
+     * @see WorkflowContext
      */
     public Object getObject(WorkflowContext workflowContext);
 }

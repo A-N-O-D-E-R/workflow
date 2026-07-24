@@ -53,9 +53,9 @@ public class WorkflowService {
     /**
      * Get the work manager service of Flowret
      *
-     * @param dao   An object called on by Flowret for persisting the state of the process to the data store
-     * @param wm    An object whose methods are called by Flowret to do work management functions
-     * @param slaQm An object on which the SLA enqueue and dequeue events are passed
+     * @param dao         An object called on by Flowret for persisting the state of the process to the data store
+     * @param workManager An object whose methods are called by Flowret to do work management functions
+     * @param slaQm       An object on which the SLA enqueue and dequeue events are passed
      * @return
      */
     public WorkflowManagerServices getWorkManagementService(
