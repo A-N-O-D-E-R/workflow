@@ -32,7 +32,7 @@
         <dependency>
             <groupId>io.github.a-n-o-d-e-r</groupId>
             <artifactId>tool</artifactId>
-            <version>0.0.6</version>
+            <version>0.0.9</version>
         </dependency>
         <dependency>
             <groupId>jakarta.persistence</groupId>
