@@ -1,0 +1,69 @@
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, successfully created case
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_START, comp name -> , work basket -> 
+Received event -> ON_PROCESS_START, isPendAtSameStep -> false
+[com.anode.workflow.service.SlaQueueService        ] INFO : Case id -> 1, raising sla milestones enqueue event on case start for milestones -> {
+  "milestones" : [ {
+    "name" : "case_start_1",
+    "setup_on" : "case_start",
+    "type" : "case_level",
+    "applied_at_age" : "20d",
+    "clock_starts" : "immediately",
+    "action" : "CANCEL:CW"
+  }, {
+    "name" : "case_start_2",
+    "setup_on" : "case_start",
+    "type" : "case_level",
+    "applied_at_age" : "30d",
+    "clock_starts" : "immediately",
+    "action" : "CANCEL:CW"
+  } ]
+}
+Received enqueue request. Json below
+{
+  "milestones" : [ {
+    "name" : "case_start_1",
+    "setup_on" : "case_start",
+    "type" : "case_level",
+    "applied_at_age" : "20d",
+    "clock_starts" : "immediately",
+    "action" : "CANCEL:CW"
+  }, {
+    "name" : "case_start_2",
+    "setup_on" : "case_start",
+    "type" : "case_level",
+    "applied_at_age" : "30d",
+    "clock_starts" : "immediately",
+    "action" : "CANCEL:CW"
+  } ]
+}
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> start, component -> start_comp, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step2, component -> comp2, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step3, component -> comp3, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step4, component -> comp4, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step5, component -> comp5, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step6, component -> comp6, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step7, component -> comp7, execution path -> .
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_COMPLETE, comp name -> , work basket -> 
+Received event -> ON_PROCESS_COMPLETE, isPendAtSameStep -> false
+Received dequeue all request
+
+Exception -> Cannot resume a case that has already completed. Case id -> 1
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_REOPEN, comp name -> comp7, work basket -> 
+Received event -> ON_PROCESS_REOPEN, isPendAtSameStep -> false
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_PEND, comp name -> comp7, work basket -> reopen_wb
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> false
+Pend workbasket -> reopen_wb
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_RESUME, comp name -> comp7, work basket -> reopen_wb
+Received event -> ON_PROCESS_RESUME, isPendAtSameStep -> true
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_TICKET_RAISED, comp name -> comp7, work basket -> 
+Received event -> ON_TICKET_RAISED, isPendAtSameStep -> true
+Ticket raised -> reopen_ticket
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step2, component -> comp2, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step3, component -> comp3, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step4, component -> comp4, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step5, component -> comp5, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step6, component -> comp6, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step7, component -> comp7, execution path -> .
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_COMPLETE, comp name -> , work basket -> 
+Received event -> ON_PROCESS_COMPLETE, isPendAtSameStep -> false
+Received dequeue all request

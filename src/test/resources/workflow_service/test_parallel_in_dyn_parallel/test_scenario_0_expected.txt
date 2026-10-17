@@ -1,0 +1,40 @@
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 3, successfully created case
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 3, raising event -> ON_PROCESS_START, comp name -> , work basket -> 
+Received event -> ON_PROCESS_START, isPendAtSameStep -> false
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> start, component -> s1_c, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing parallel routing rule -> r1, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r1_s1, component -> r1_s1_c, execution path -> .r1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r1_s1, component -> r1_s1_c, execution path -> .r1.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing parallel routing rule -> r2, execution path -> .r1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing parallel routing rule -> r2, execution path -> .r1.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r1_s1, component -> r1_s1_c, execution path -> .r1.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r2_1_s1, component -> r2_1_s1_c, execution path -> .r1.1.r2.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r2_2_s1, component -> r2_2_s1_c, execution path -> .r1.1.r2.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r2_3_s1, component -> r2_3_s1_c, execution path -> .r1.1.r2.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r2_1_s1, component -> r2_1_s1_c, execution path -> .r1.2.r2.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r2_2_s1, component -> r2_2_s1_c, execution path -> .r1.2.r2.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r2_3_s1, component -> r2_3_s1_c, execution path -> .r1.2.r2.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing parallel routing rule -> r2, execution path -> .r1.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.1.r2.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.1.r2.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.1.r2.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r2_1_s1, component -> r2_1_s1_c, execution path -> .r1.3.r2.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.2.r2.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.2.r2.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.2.r2.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r2_2_s1, component -> r2_2_s1_c, execution path -> .r1.3.r2.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r2_3_s1, component -> r2_3_s1_c, execution path -> .r1.3.r2.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.3.r2.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.3.r2.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r1_s2, component -> r1_s2_c, execution path -> .r1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.3.r2.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r1_s2, component -> r1_s2_c, execution path -> .r1.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> r1_s2, component -> r1_s2_c, execution path -> .r1.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .r1.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> s2, component -> s2_c, execution path -> .
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 3, raising event -> ON_PROCESS_COMPLETE, comp name -> , work basket -> 
+Received event -> ON_PROCESS_COMPLETE, isPendAtSameStep -> false
+
+Exception -> Cannot resume a case that has already completed. Case id -> 3
