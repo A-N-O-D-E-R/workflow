@@ -3,17 +3,17 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.a-n-o-d-e-r</groupId>
     <artifactId>workflow</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>simple-workflow</name>
-    <description>A simple workflow implementation.</description>
+    <name>workflow</name>
+    <description>Embeddable workflow orchestration engine: JSON journeys, parallel routes, persisted state, crash recovery, SLA.</description>
     <url>https://github.com/A-N-O-D-E-R/workflow</url>
 
     <licenses>
         <license>
-            <name>MIT License</name>
-            <url>https://opensource.org/licenses/MIT</url>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
 
@@ -179,8 +179,8 @@
                                 <resource>
                                     <directory>${project.basedir}/</directory>
                                     <includes>
-                                        <include>AUTHORS</include>
                                         <include>LICENSE</include>
+                                        <include>NOTICE</include>
                                     </includes>
                                 </resource>
                             </resources>

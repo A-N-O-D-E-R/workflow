@@ -1,178 +1,66 @@
-<artifact identifier="improved-readme" type="text/markdown" title="Improved README.md Structure">
-# Simple Workflow - Lightweight Java Orchestration Engine
+# workflow — embeddable Java orchestration engine
 
-[![Java 17+](https://img.shields.io/badge/Java-17%2B-blue)]()
-[![Maven Central](https://img.shields.io/maven-central/v/com.anode/workflow)]()
+Lightweight, embeddable workflow engine: JSON-defined journeys of tasks, singular and parallel
+routes, joins, pauses and tickets, with persisted state, crash recovery, work baskets and SLA
+milestones. No server to run.
 
-## Quick Links
-- [📚 Full Documentation](./docs/README.md)
-- [🚀 Quick Start](#quick-start)
-- [📖 API Reference](./docs/api/README.md)
-- [💡 Examples](./examples)
-- [❓ FAQ](#faq)
+- Java 25. Runtime dependencies: Jackson, the Jakarta Persistence API (annotations only), SLF4J,
+  and the document/service classes of [`tool`](https://github.com/A-N-O-D-E-R/tools).
+- Spring Boot integration: [`workflow-spring-boot-starter`](https://github.com/A-N-O-D-E-R/workflow-springboot-starter).
+- Derived from American Express [Flowret](https://github.com/americanexpress/unify-flowret) — see [NOTICE](NOTICE).
 
-## Overview
-A lightweight, embeddable workflow orchestration engine for Java applications, supporting complex parallel processing, SLA management, and crash recovery.
+## Installation
 
-### Key Features
-- ✅ **Simple JSON-based workflow definition**
-- ✅ **True parallel processing** (technical, not just business)
-- ✅ **Crash-proof with automatic recovery**
-- ✅ **SLA milestone management**
-- ✅ **Work basket routing**
-- ✅ **Flexible persistence** (File, RDBMS, NoSQL)
-- ✅ **Zero external dependencies** (beyond JPA/Hibernate)
-- ✅ **Horizontally scalable**
-
-## Quick Start
-
-### Installation
 ```xml
 <dependency>
-    <groupId>com.anode</groupId>
+    <groupId>io.github.a-n-o-d-e-r</groupId>
     <artifactId>workflow</artifactId>
-    <version>0.0.1</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
-### 5-Minute Example
+## Quick start
+
 ```java
-// 1. Initialize
-WorkflowService.init(10, 30000, "-");
+WorkflowService.init(10, 30000, "-");           // worker threads, idle timeout (ms), id separator
 
-// 2. Create components
-CommonService dao = new FileDao("./workflow-data");
-WorkflowComponantFactory factory = new MyComponentFactory();
-EventHandler handler = new MyEventHandler();
+CommonService dao = ...;                         // persistence: your DAO (file, memory, JDBC, JPA via the starter)
+WorkflowComponantFactory factory = ctx -> ...;   // returns the InvokableTask / InvokableRoute for a step
+EventHandler handler = (event, ctx) -> {};       // lifecycle events (start, pend, complete...)
 
-// 3. Get runtime service
-RuntimeService rts = WorkflowService.instance()
-    .getRunTimeService(dao, factory, handler, null);
+WorkflowDefinition journey =
+        WorkflowDefinitionMapper.toEntity(new JDocument(Files.readString(Path.of("order.json"))));
 
-// 4. Start a workflow
-String json = loadWorkflowDefinition("order-process.json");
-rts.startCase("order-123", json, null, null);
+RuntimeService rts = WorkflowService.instance().getRunTimeService(dao, factory, handler, null);
+rts.startCase("order-123", journey, null, null); // runs until the journey pends or ends
+rts.resumeCase("order-123");                      // after the pending work is done
 ```
 
-[See full example →](./docs/getting-started.md)
+Full guides: [docs/](docs/README.md).
 
-## Architecture Overview
+## Thread safety
 
-```
-┌─────────────────────────────────────────────┐
-│               Your Application              │
-├─────────────────────────────────────────────┤
-│  ┌───────────┐  ┌──────────┐  ┌──────────┐  │
-│  │   Steps   │  │  Routes  │  │   DAO    │  │
-│  └─────┬─────┘  └────┬─────┘  └────┬─────┘  │
-│        │             │             │        │
-├────────┼─────────────┼─────────────┼────────┤
-│        │    Workflow Service       │        │
-│  ┌─────▼──────┬──────▼──────┬──────▼─────┐  │
-│  │  Runtime   │  Work Mgmt  │    SLA     │  │
-│  │  Service   │   Service   │   Service  │  │
-│  └────────────┴─────────────┴────────────┘  │
-└─────────────────────────────────────────────┘
-```
+- A `RuntimeService` carries the state of the case it is operating on. Its public operations are
+  `synchronized`: a shared instance is safe but runs cases one at a time. For concurrency, take one
+  instance per concurrent operation — `getRunTimeService` creates a new, cheap instance each call.
+- Concurrent operations on the **same** case id must be serialized by the caller (e.g. a database
+  row lock); parallel branches *inside* a case run on the engine's thread pool.
 
-## Documentation Structure
+## Persistence of variables
 
-### For New Users
-1. [Getting Started Guide](./docs/getting-started.md)
-2. [Core Concepts](./docs/concepts/README.md)
-3. [Your First Workflow](./docs/tutorials/first-workflow.md)
+Variables are typed (`STRING`, `BOOLEAN`, `INTEGER`, `LONG`, lists of those, `OBJECT`). With JPA,
+scalars are stored as plain text; lists and objects as Base64 Java serialization, read back
+through an `ObjectInputFilter` that only admits `java.base` classes unless you configure
+`jdk.serialFilter`.
 
-### For Developers
-- [Architecture Deep Dive](./docs/architecture/README.md)
-- [API Reference](./docs/api/README.md)
-- [Best Practices](./docs/best-practices/README.md)
-- [Testing Guide](./docs/testing/README.md)
+## Build
 
-### For Operations
-- [Deployment Guide](./docs/deployment/README.md)
-- [Monitoring & Troubleshooting](./docs/operations/README.md)
-- [Performance Tuning](./docs/operations/performance.md)
-
-## Project Structure
-```
-workflow/
-├── src/
-│   ├── main/java/com/anode/workflow/
-│   │   ├── service/          # Core services
-│   │   ├── entities/         # Domain entities
-│   │   ├── storage/          # Persistence layer
-│   │   └── mapper/           # JSON ↔ Entity mappers
-│   ├── test/                 # Comprehensive test suite
-│   └── main/resources/       # JSON schemas
-├── docs/                     # Documentation
-│   ├── getting-started.md
-│   ├── concepts/
-│   ├── architecture/
-│   ├── api/
-│   └── examples/
-├── examples/                 # Working examples
-└── README.md
+```bash
+mvn verify          # JDK 25
 ```
 
-## Comparison with Other Solutions
-
-| Feature | Simple Workflow | Camunda | Apache Airflow | Temporal |
-|---------|----------------|---------|----------------|----------|
-| Embedded | ✅ | ❌ | ❌ | ❌ |
-| True Parallel | ✅ | ❌ | ✅ | ✅ |
-| Crash Recovery | ✅ | ✅ | ✅ | ✅ |
-| Lightweight | ✅ (~200KB) | ❌ | ❌ | ❌ |
-| No Server Required | ✅ | ❌ | ❌ | ❌ |
-
-## When to Use This
-
-**✅ Good Fit:**
-- Business process orchestration within an application
-- Long-running processes with human tasks
-- Complex parallel workflows
-- Need for crash recovery
-- Embedded orchestration requirements
-
-**❌ Not Recommended:**
-- Simple sequential tasks (use plain Java)
-- Microservice choreography (use event bus)
-- Data pipelines (use Apache Airflow)
-- Short-lived processes (<1 second)
-
-## Contributing
-See [CONTRIBUTING.md](./CONTRIBUTING.md)
+Releases: push a `v<version>` tag; GitHub Actions publishes to Maven Central.
 
 ## License
-[License details]
 
-## Support
-- 📧 Email: support@example.com
-- 💬 Discussions: [GitHub Discussions](...)
-- 🐛 Issues: [GitHub Issues](...)
-
-## Roadmap
-- [ ] Visual workflow designer
-- [ ] REST API for workflow management
-- [ ] Enhanced monitoring dashboard
-- [ ] Spring Boot starter
-
-## Acknowledgments
-Built with ❤️ by the A-N-O-D-E-R team.
-</artifact>
-
-### 11. **Specific  Documentation Files**
-
-Create these documentation files:
-
-1. **`docs/concepts/execution-paths.md`** - Deep dive into execution path naming
-2. **`docs/concepts/crash-recovery.md`** - Detailed crash recovery mechanism
-3. **`docs/persistence/custom-dao.md`** - Guide to implementing custom persistence
-4. **`docs/persistence/postgres-setup.md`** - PostgreSQL configuration guide
-5. **`docs/troubleshooting/common-issues.md`** - Common problems and solutions
-6. **`docs/api/process-context.md`** - Comprehensive WorkflowContext documentation
-7. **`docs/patterns/idempotency.md`** - Implementing idempotent operations
-8. **`docs/patterns/error-handling.md`** - Error handling patterns
-9. **`CONTRIBUTING.md`** - Contribution guidelines
-10. **`CHANGELOG.md`** - Version history
-
-
+Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
