@@ -51,6 +51,11 @@ public class Route extends Step {
         this.userData = userData;
     }
 
+    /** Branches by name (read-only view, empty for dynamic routes). */
+    public Map<String, Branch> getBranches() {
+        return branches == null ? Map.of() : java.util.Collections.unmodifiableMap(branches);
+    }
+
     public Branch getBranch(String name) {
         return branches.get(name);
     }

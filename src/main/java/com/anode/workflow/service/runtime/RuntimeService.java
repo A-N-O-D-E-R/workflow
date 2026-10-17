@@ -337,6 +337,7 @@ public class RuntimeService {
             hasAlreadyStarted = true;
         }
 
+        journey.validate();
         // read the process definition and get process info
         workflowDefinition = journey;
         // read the process definition and get process info

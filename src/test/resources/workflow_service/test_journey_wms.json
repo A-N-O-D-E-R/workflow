@@ -1,12 +1,7 @@
 {
   "journey": {
     "name": "test_journey",
-    "tickets": [
-      {
-        "name": "final_step",
-        "step": "step29"
-      }
-    ],
+    "tickets": [],
     "process_variables": [
       {
         "name": "id",
