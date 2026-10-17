@@ -50,6 +50,9 @@ public class ExecPath {
 
     private ErrorHandler pendError = new ErrorHandler();
 
+    /** For JPA and JSON persistence only. */
+    protected ExecPath() {}
+
     public ExecPath(String name) {
         this.name = name;
     }

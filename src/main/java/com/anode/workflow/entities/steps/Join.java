@@ -11,6 +11,9 @@ public class Join extends Step {
     @Column(name = "next_step")
     private String next = null;
 
+    /** For JPA and JSON persistence only. */
+    protected Join() {}
+
     public Join(String name, String next) {
         super(name, StepType.P_JOIN);
         this.next = next;

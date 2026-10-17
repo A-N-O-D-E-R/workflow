@@ -11,6 +11,9 @@ public class Pause extends Step {
     @Column(name = "next_step")
     private String next = null;
 
+    /** For JPA and JSON persistence only. */
+    protected Pause() {}
+
     public Pause(String name, String next) {
         super(name, Step.StepType.PAUSE);
         this.next = next;

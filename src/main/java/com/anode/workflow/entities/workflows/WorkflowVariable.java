@@ -1,6 +1,9 @@
 package com.anode.workflow.entities.workflows;
 
 import com.anode.workflow.exceptions.WorkflowVariableTypeParseException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,6 +24,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "workflow_variable")
+@JsonPropertyOrder({"name", "type", "comment", "value"})
 public class WorkflowVariable implements Serializable {
 
     @Id private Long hibid;
@@ -33,6 +37,7 @@ public class WorkflowVariable implements Serializable {
     @Column(name = "value", nullable = true, columnDefinition = "text")
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @JsonIgnore
     private String storedValue = null;
 
     @Enumerated(EnumType.STRING)
@@ -59,6 +64,18 @@ public class WorkflowVariable implements Serializable {
     @PostLoad
     void decodeValue() {
         value = WorkflowVariableCodec.decode(type, storedValue);
+    }
+
+    /** JSON form of {@link #value}: the same type-driven text encoding as the JPA column. */
+    @JsonProperty("value")
+    private String jsonValue() {
+        return WorkflowVariableCodec.encode(type, value);
+    }
+
+    @JsonProperty("value")
+    private void jsonValue(String encoded) {
+        // "type" is declared before "value" in the class, hence written (and read) first
+        value = WorkflowVariableCodec.decode(type, encoded);
     }
 
     private void validate(WorkflowVariableType type, Object value) {

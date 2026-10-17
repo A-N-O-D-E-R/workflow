@@ -17,6 +17,9 @@ public class Task extends Step {
     @Column(name = "user_data")
     private String userData = null;
 
+    /** For JPA and JSON persistence only. */
+    protected Task() {}
+
     public Task(String name, String componentName, String next, String userData) {
         super(name, Step.StepType.TASK);
         this.next = next;

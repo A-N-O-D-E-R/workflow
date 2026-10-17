@@ -29,6 +29,9 @@ public class Route extends Step {
     @Column(name = "next_step")
     private String next = null;
 
+    /** For JPA and JSON persistence only. */
+    protected Route() {}
+
     public Route(
             String name,
             String componentName,

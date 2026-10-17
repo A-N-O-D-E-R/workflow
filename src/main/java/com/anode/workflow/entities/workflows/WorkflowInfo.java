@@ -114,9 +114,9 @@ public class WorkflowInfo implements Serializable {
 
     @Id private Long hibid;
 
-    @Column private final String caseId;
+    @Column private String caseId;
 
-    @ManyToOne private final WorkflowDefinition workflowDefinition;
+    @ManyToOne private WorkflowDefinition workflowDefinition;
 
     @Transient private ReentrantLock lock = new ReentrantLock(true);
 
@@ -164,6 +164,9 @@ public class WorkflowInfo implements Serializable {
      * @param caseId the unique identifier for this workflow instance; must not be null
      * @param workflowDefinition the workflow definition this instance will execute; must not be null
      */
+    /** For JPA and JSON persistence only. */
+    protected WorkflowInfo() {}
+
     public WorkflowInfo(String caseId, WorkflowDefinition workflowDefinition) {
         this.caseId = caseId;
         this.workflowDefinition = workflowDefinition;

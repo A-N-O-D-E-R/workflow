@@ -26,6 +26,9 @@ public class Branch implements Serializable {
         return next;
     }
 
+    /** For JPA and JSON persistence only. */
+    protected Branch() {}
+
     public Branch(String name, String next) {
         this.name = name;
         this.next = next;
