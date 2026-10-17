@@ -1,18 +1,21 @@
 package com.anode.workflow.entities.workflows;
 
 import com.anode.workflow.exceptions.WorkflowVariableTypeParseException;
-import com.anode.workflow.hibernate.ObjectType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.io.Serializable;
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
 
 @Getter
 @Setter
@@ -24,20 +27,38 @@ public class WorkflowVariable implements Serializable {
 
     private String name = null;
 
-    @Column(name = "value", nullable = true)
-    @Type(value = ObjectType.class) // Use the custom type
-    private volatile Object value = null;
+    @Transient private volatile Object value = null;
+
+    /** Persistent form of {@link #value}, encoded according to {@link #type}. */
+    @Column(name = "value", nullable = true, columnDefinition = "text")
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private String storedValue = null;
 
     @Enumerated(EnumType.STRING)
     private WorkflowVariableType type = null;
 
     private String comment = "";
 
+    /** For JPA only. */
+    protected WorkflowVariable() {}
+
     public WorkflowVariable(String name, WorkflowVariableType type, Object value) {
         validate(type, value);
         this.name = name;
         this.value = value;
         this.type = type;
+    }
+
+    @PrePersist
+    @PreUpdate
+    void encodeValue() {
+        storedValue = WorkflowVariableCodec.encode(type, value);
+    }
+
+    @PostLoad
+    void decodeValue() {
+        value = WorkflowVariableCodec.decode(type, storedValue);
     }
 
     private void validate(WorkflowVariableType type, Object value) {
