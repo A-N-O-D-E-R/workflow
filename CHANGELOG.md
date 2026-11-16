@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (0.1.0)
+- Runtime dependencies reduced to Jackson, Jakarta Persistence API, SLF4J and tool's document/service
+  classes; Hibernate, PowerMock and tool's SSH/templating/embedded-Maven stack removed.
+- `RuntimeService` public operations are `synchronized`; documented as one instance per concurrent
+  operation (sharing an instance between concurrent cases used to corrupt state and hang).
+- JPA persistence of workflow variables is driven by the declared type (INTEGER no longer read back
+  as LONG; lists and objects no longer lost through `toString()`), with a deserialization filter.
+- License metadata aligned with the LICENSE file (Apache 2.0) and Flowret attribution added (NOTICE).
+
+### Fixed
+- Six parallel/reopen scenarios that ran without assertions now compare their event logs.
+- Concurrency test suite restored and made to terminate.
+
 ### Added
 - Initial comprehensive documentation structure
 - Getting started guide with complete example

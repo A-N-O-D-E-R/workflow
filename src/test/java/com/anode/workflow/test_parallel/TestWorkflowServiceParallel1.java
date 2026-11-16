@@ -96,6 +96,9 @@ public class TestWorkflowServiceParallel1 {
         init(dao, new TestComponentFactoryParallel1(), new TestHandler(), null);
         runJourney("parallel_test_1", dao);
         TestManager.writeFiles(writeFiles, path, dao.getDocumentMap());
-        TestManager.myAssertEqualsTodo(writeToConsole, simpleClassName + "." + methodName, null);
+        TestManager.myAssertEquals2(
+                writeToConsole,
+                simpleClassName + "." + methodName,
+                "/workflow_service/test_parallel/parallel1_scenario_1_expected.txt");
     }
 }

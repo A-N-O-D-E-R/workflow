@@ -95,7 +95,10 @@ public class TestWorkflowServicePidp {
         init(dao, new TestComponentFactoryPidp(), new TestHandler(), null);
         runJourney("pidp_test", dao);
         TestManager.writeFiles(writeFiles, path, dao.getDocumentMap());
-        TestManager.myAssertEqualsTodo(writeToConsole, simpleClassName + "." + methodName, null);
+        TestManager.myAssertEquals2(
+                writeToConsole,
+                simpleClassName + "." + methodName,
+                "/workflow_service/test_parallel_in_dyn_parallel/test_scenario_0_expected.txt");
     }
 
     @Test
@@ -107,7 +110,10 @@ public class TestWorkflowServicePidp {
         init(dao, new TestComponentFactoryPidp(), new TestHandler(), null);
         runJourney("pidp_test", dao);
         TestManager.writeFiles(writeFiles, path, dao.getDocumentMap());
-        TestManager.myAssertEqualsTodo(writeToConsole, simpleClassName + "." + methodName, null);
+        TestManager.assertSameEventsIgnoringBranchOrder(
+                writeToConsole,
+                simpleClassName + "." + methodName,
+                "/workflow_service/test_parallel_in_dyn_parallel/test_scenario_1_expected.txt");
     }
 
     public static WorkflowContext startCase(

@@ -11,6 +11,9 @@ public class Persist extends Step {
     @Column(name = "next_step")
     private String next = null;
 
+    /** For JPA and JSON persistence only. */
+    protected Persist() {}
+
     public Persist(String name, String next) {
         super(name, Step.StepType.PERSIST);
         this.next = next;

@@ -17,6 +17,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class TestManager {
 
@@ -75,19 +77,34 @@ public class TestManager {
         previousConsole.flush();
     }
 
-    public static void myAssertEqualsTodo(
+    /**
+     * Like {@link #myAssertEquals2} but also ignores which parallel branch index (".1.", ".ai_index_2."
+     * ...) reached a pend or a join first: that race is legitimate, only the set of events is fixed.
+     */
+    public static void assertSameEventsIgnoringBranchOrder(
             boolean writeToConsole, String testCase, String resourcePath) {
-        String s = newConsole.toString();
+        String output = getSortedWithoutCrLf(withoutBranchIndexes(newConsole.toString()));
+        String expected =
+                StringUtils.getResourceAsString(TestWorkflowService.class, resourcePath);
+        assertEquals(getSortedWithoutCrLf(withoutBranchIndexes(expected)), output);
         previousConsole.println(
-                "*********************** Test case run with no assertion, test case name -> "
-                        + testCase);
-        if (writeToConsole == true) {
-            previousConsole.println();
-            previousConsole.println(s);
-            previousConsole.println();
-            previousConsole.println();
-        }
+                "*********************** Test case successful, test case name -> " + testCase);
         previousConsole.flush();
+    }
+
+    private static final Pattern BRANCH_INDEX =
+            Pattern.compile("(?<=\\.)(ai_index_)?\\d+(?=\\.)");
+
+    private static String withoutBranchIndexes(String s) {
+        return s.lines()
+                .map(line -> {
+                    int at = line.indexOf("execution path -> ");
+                    return at < 0
+                            ? line
+                            : line.substring(0, at)
+                                    + BRANCH_INDEX.matcher(line.substring(at)).replaceAll("$1#");
+                })
+                .collect(Collectors.joining("\n"));
     }
 
     public static void myAssertEquals2(

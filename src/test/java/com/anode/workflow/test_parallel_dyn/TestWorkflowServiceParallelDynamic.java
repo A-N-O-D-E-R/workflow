@@ -88,6 +88,9 @@ public class TestWorkflowServiceParallelDynamic {
         init(dao, new TestComponentFactoryParallelSupps(), new TestHandler(), null);
         runJourney("parallel_dyn_test", dao);
         TestManager.writeFiles(writeFiles, path, dao.getDocumentMap());
-        TestManager.myAssertEqualsTodo(writeToConsole, simpleClassName + "." + methodName, null);
+        TestManager.assertSameEventsIgnoringBranchOrder(
+                writeToConsole,
+                simpleClassName + "." + methodName,
+                "/workflow_service/test_parallel_dyn/test_scenario_1_expected.txt");
     }
 }

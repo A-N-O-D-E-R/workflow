@@ -92,7 +92,9 @@ import java.io.Serializable;
 @DiscriminatorColumn(name = "step_class", discriminatorType = DiscriminatorType.STRING)
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        property = "type") // Tells Jackson to add type info to the JSON
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "type",
+        visible = true) // the StepType field doubles as the JSON type id
 @JsonSubTypes({
     @JsonSubTypes.Type(value = Task.class, name = "TASK"),
     @JsonSubTypes.Type(value = Pause.class, name = "PAUSE"),
@@ -124,6 +126,9 @@ public abstract class Step implements Serializable {
      * @param name the unique name of this step within the workflow; must not be null
      * @param type the type of step determining its execution behavior; must not be null
      */
+    /** For JPA and JSON persistence only. */
+    protected Step() {}
+
     protected Step(String name, StepType type) {
         this.name = name;
         this.type = type;

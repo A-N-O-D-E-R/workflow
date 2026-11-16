@@ -1,6 +1,5 @@
 package com.anode.workflow.entities.sla;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -49,7 +48,7 @@ public class Milestone implements Serializable {
             Date appliedAtTimestamp,
             Boolean followBusinessCalendar,
             ClockStartOption clockStarts,
-            @JsonProperty("action") String action,
+            String action,
             String userData,
             List<FutureMilestones> furtherMilestones) {
         if (Objects.nonNull(action) && !isValidType(action)) {
@@ -61,6 +60,7 @@ public class Milestone implements Serializable {
         this.type = type;
         this.workBasketName = workBasket;
         this.appliedAtAge = appliedAtAge;
+        this.appliedAtTimestamp = appliedAtTimestamp;
         this.followBusinessCalendar = followBusinessCalendar;
         this.clockStarts = clockStarts;
         this.userData = userData;

@@ -1,43 +1,81 @@
 package com.anode.workflow.entities.workflows;
 
 import com.anode.workflow.exceptions.WorkflowVariableTypeParseException;
-import com.anode.workflow.hibernate.ObjectType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.io.Serializable;
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "workflow_variable")
+@JsonPropertyOrder({"name", "type", "comment", "value"})
 public class WorkflowVariable implements Serializable {
 
     @Id private Long hibid;
 
     private String name = null;
 
-    @Column(name = "value", nullable = true)
-    @Type(value = ObjectType.class) // Use the custom type
-    private volatile Object value = null;
+    @Transient private volatile Object value = null;
+
+    /** Persistent form of {@link #value}, encoded according to {@link #type}. */
+    @Column(name = "value", nullable = true, columnDefinition = "text")
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @JsonIgnore
+    private String storedValue = null;
 
     @Enumerated(EnumType.STRING)
     private WorkflowVariableType type = null;
 
     private String comment = "";
 
+    /** For JPA only. */
+    protected WorkflowVariable() {}
+
     public WorkflowVariable(String name, WorkflowVariableType type, Object value) {
         validate(type, value);
         this.name = name;
         this.value = value;
         this.type = type;
+    }
+
+    @PrePersist
+    @PreUpdate
+    void encodeValue() {
+        storedValue = WorkflowVariableCodec.encode(type, value);
+    }
+
+    @PostLoad
+    void decodeValue() {
+        value = WorkflowVariableCodec.decode(type, storedValue);
+    }
+
+    /** JSON form of {@link #value}: the same type-driven text encoding as the JPA column. */
+    @JsonProperty("value")
+    private String jsonValue() {
+        return WorkflowVariableCodec.encode(type, value);
+    }
+
+    @JsonProperty("value")
+    private void jsonValue(String encoded) {
+        // "type" is declared before "value" in the class, hence written (and read) first
+        value = WorkflowVariableCodec.decode(type, encoded);
     }
 
     private void validate(WorkflowVariableType type, Object value) {

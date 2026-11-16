@@ -116,6 +116,9 @@ public class TestWorkflowServiceReopen {
         init(dao, new TestComponentFactory(), new TestHandler(), new TestSlaQueueManager());
         runJourney("test_journey_reopen", dao);
         TestManager.writeFiles(writeFiles, path, dao.getDocumentMap());
-        TestManager.myAssertEqualsTodo(writeToConsole, simpleClassName + "." + methodName, null);
+        TestManager.myAssertEquals2(
+                writeToConsole,
+                simpleClassName + "." + methodName,
+                "/workflow_service/test_singular/reopen_clean_expected.txt");
     }
 }

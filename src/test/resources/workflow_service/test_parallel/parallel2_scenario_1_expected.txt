@@ -1,0 +1,17 @@
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, successfully created case
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_START, comp name -> , work basket -> 
+Received event -> ON_PROCESS_START, isPendAtSameStep -> false
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> start, component -> start, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step_1, component -> step_1_comp, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing parallel routing rule -> route_1, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step_wait_2, component -> step_wait_2_comp, execution path -> .route_1.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step_wait_3, component -> step_wait_3_comp, execution path -> .route_1.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step_wait_1, component -> step_wait_1_comp, execution path -> .route_1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, handling join for execution path -> .route_1.2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, handling join for execution path -> .route_1.3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, handling join for execution path -> .route_1.1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 1, executing task -> step_3, component -> step_3_comp, execution path -> .
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 1, raising event -> ON_PROCESS_COMPLETE, comp name -> , work basket -> 
+Received event -> ON_PROCESS_COMPLETE, isPendAtSameStep -> false
+
+Exception -> Cannot resume a case that has already completed. Case id -> 1

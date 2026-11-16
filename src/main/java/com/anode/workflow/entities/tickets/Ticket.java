@@ -22,6 +22,9 @@ public class Ticket implements Serializable {
     @Column private String name = null;
     @Column private String step = null;
 
+    /** For JPA and JSON persistence only. */
+    protected Ticket() {}
+
     public Ticket(String name, String step) {
         this.name = name;
         this.step = step;

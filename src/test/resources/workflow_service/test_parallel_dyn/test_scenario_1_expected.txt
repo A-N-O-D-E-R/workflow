@@ -1,0 +1,55 @@
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 3, successfully created case
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 3, raising event -> ON_PROCESS_START, comp name -> , work basket -> 
+Received event -> ON_PROCESS_START, isPendAtSameStep -> false
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> start, component -> start, execution path -> .
+Step -> start, execution path -> .
+Exiting Step -> start, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing singular routing rule -> route_0, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing parallel routing rule -> route_1, execution path -> .
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_1, component -> step_1, execution path -> .route_1.ai_index_1.
+Step -> step_1, execution path -> .route_1.ai_index_1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_1, component -> step_1, execution path -> .route_1.ai_index_2.
+Step -> step_1, execution path -> .route_1.ai_index_2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_1, component -> step_1, execution path -> .route_1.ai_index_3.
+Step -> step_1, execution path -> .route_1.ai_index_3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_1, component -> step_1, execution path -> .route_1.ai_index_4.
+Step -> step_1, execution path -> .route_1.ai_index_4.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_1, component -> step_1, execution path -> .route_1.ai_index_5.
+Step -> step_1, execution path -> .route_1.ai_index_5.
+Exiting Step -> step_1, execution path -> .route_1.ai_index_1.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, pending at task -> step_1, component -> step_1, execution path -> .route_1.ai_index_1.
+Exiting Step -> step_1, execution path -> .route_1.ai_index_2.
+Exiting Step -> step_1, execution path -> .route_1.ai_index_3.
+Exiting Step -> step_1, execution path -> .route_1.ai_index_4.
+Exiting Step -> step_1, execution path -> .route_1.ai_index_5.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_2, component -> step_2, execution path -> .route_1.ai_index_2.
+Step -> step_2, execution path -> .route_1.ai_index_2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_2, component -> step_2, execution path -> .route_1.ai_index_3.
+Step -> step_2, execution path -> .route_1.ai_index_3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_2, component -> step_2, execution path -> .route_1.ai_index_4.
+Step -> step_2, execution path -> .route_1.ai_index_4.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_2, component -> step_2, execution path -> .route_1.ai_index_5.
+Step -> step_2, execution path -> .route_1.ai_index_5.
+Exiting Step -> step_2, execution path -> .route_1.ai_index_2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_3, component -> step_3, execution path -> .route_1.ai_index_2.
+Step -> step_3, execution path -> .route_1.ai_index_2.
+Exiting Step -> step_2, execution path -> .route_1.ai_index_3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_3, component -> step_3, execution path -> .route_1.ai_index_3.
+Step -> step_3, execution path -> .route_1.ai_index_3.
+Exiting Step -> step_2, execution path -> .route_1.ai_index_4.
+Exiting Step -> step_2, execution path -> .route_1.ai_index_5.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_3, component -> step_3, execution path -> .route_1.ai_index_4.
+Step -> step_3, execution path -> .route_1.ai_index_4.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, executing task -> step_3, component -> step_3, execution path -> .route_1.ai_index_5.
+Step -> step_3, execution path -> .route_1.ai_index_5.
+Exiting Step -> step_3, execution path -> .route_1.ai_index_2.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .route_1.ai_index_2.
+Exiting Step -> step_3, execution path -> .route_1.ai_index_3.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .route_1.ai_index_3.
+Exiting Step -> step_3, execution path -> .route_1.ai_index_4.
+Exiting Step -> step_3, execution path -> .route_1.ai_index_5.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .route_1.ai_index_4.
+[com.anode.workflow.service.runtime.ExecThreadTask ] INFO : Case id -> 3, handling join for execution path -> .route_1.ai_index_5.
+[com.anode.workflow.service.runtime.RuntimeService ] INFO : Case id -> 3, raising event -> ON_PROCESS_PEND, comp name -> step_1, work basket -> some_wb
+Received event -> ON_PROCESS_PEND, isPendAtSameStep -> false
+Pend workbasket -> some_wb

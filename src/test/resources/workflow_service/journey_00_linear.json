@@ -1,0 +1,11 @@
+{
+  "journey": {
+    "name": "journey_00_linear",
+    "flow": [
+      { "name": "start", "type": "task", "component": "start_comp", "next": "step2" },
+      { "name": "step2", "component": "comp2", "next": "step3" },
+      { "name": "step3", "component": "comp3", "next": "step4" },
+      { "name": "step4", "component": "comp4", "next": "end" }
+    ]
+  }
+}

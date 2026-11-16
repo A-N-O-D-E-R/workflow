@@ -1,6 +1,12 @@
 package com.anode.workflow.entities.workflows;
 
 import com.anode.workflow.entities.steps.Step;
+import com.anode.workflow.exceptions.WorkflowRuntimeException;
+import com.anode.workflow.entities.steps.Task;
+import com.anode.workflow.entities.steps.Route;
+import com.anode.workflow.entities.steps.Persist;
+import com.anode.workflow.entities.steps.Pause;
+import com.anode.workflow.entities.steps.Join;
 import com.anode.workflow.entities.tickets.Ticket;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
@@ -224,6 +230,45 @@ public class WorkflowDefinition implements Serializable {
      * @param name the name of the step to retrieve; must not be null
      * @return the step with the given name, or null if not found
      */
+    /**
+     * Checks the definition is runnable: a {@code start} step exists and every {@code next}, branch
+     * and ticket refers to a step of the definition (or to {@code end}). Without this, a dangling
+     * reference silently ends the case.
+     *
+     * @throws WorkflowRuntimeException listing every dangling reference
+     */
+    public void validate() {
+        List<String> errors = new ArrayList<>();
+        if (steps == null || !steps.containsKey("start")) {
+            errors.add("no step named 'start'");
+        }
+        Map<String, Step> all = steps == null ? Map.of() : steps;
+        java.util.function.BiConsumer<String, String> check = (from, to) -> {
+            if (to != null && !to.isEmpty() && !to.equals("end") && !all.containsKey(to)) {
+                errors.add(from + " -> '" + to + "' (unknown step)");
+            }
+        };
+        for (Step step : all.values()) {
+            switch (step) {
+                case Route route -> {
+                    check.accept("route " + route.getName(), route.getNext());
+                    route.getBranches().forEach((branchName, branch) ->
+                            check.accept("branch " + route.getName() + "." + branchName, branch.getNext()));
+                }
+                case Task task -> check.accept("step " + task.getName(), task.getNext());
+                case Join join -> check.accept("join " + join.getName(), join.getNext());
+                case Pause pause -> check.accept("pause " + pause.getName(), pause.getNext());
+                case Persist persist -> check.accept("persist " + persist.getName(), persist.getNext());
+                default -> {}
+            }
+        }
+        tickets.values().forEach(ticket -> check.accept("ticket " + ticket.getName(), ticket.getStep()));
+        if (!errors.isEmpty()) {
+            throw new WorkflowRuntimeException(
+                    "Invalid workflow definition '" + name + "': " + String.join(", ", errors));
+        }
+    }
+
     public Step getStep(String name) {
         return steps.get(name);
     }

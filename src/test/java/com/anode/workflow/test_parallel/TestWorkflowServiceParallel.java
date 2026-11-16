@@ -30,6 +30,12 @@ import java.util.Objects;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import com.anode.workflow.test_durable.JsonDao;
+import java.io.Serializable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TestWorkflowServiceParallel {
 
@@ -150,6 +156,50 @@ public class TestWorkflowServiceParallel {
         } catch (WorkflowRuntimeException e) {
             System.out.println("Exception -> " + e.getMessage());
         }
+    }
+
+    /**
+     * Same journey as {@link #runJourney}, but every start and resume uses a new RuntimeService over
+     * a store that only keeps JSON: each step continues from deserialized state, as after a restart.
+     */
+    private static void runJourneyDurably(String journey) {
+        Map<Serializable, String> rows = new ConcurrentHashMap<>();
+        String json =
+                StringUtils.getResourceAsString(
+                        TestWorkflowService.class, "/workflow_service/" + journey + ".json");
+        String slaJson =
+                StringUtils.getResourceAsString(
+                        TestWorkflowService.class, "/workflow_service/" + journey + "_sla.json");
+        init(new JsonDao(rows), new TestComponentFactoryParallel(), new TestHandler(), null);
+        startCase("1", json, null,
+                slaJson == null ? null : MilestoneMapper.toEntities(new JDocument(slaJson)));
+        try {
+            while (true) {
+                System.out.println();
+                init(new JsonDao(rows), new TestComponentFactoryParallel(), new TestHandler(), null);
+                rts.resumeCase("1");
+            }
+        } catch (WorkflowRuntimeException e) {
+            System.out.println("Exception -> " + e.getMessage());
+        }
+    }
+
+    @ParameterizedTest(name = "scenario {0}")
+    @ValueSource(strings = {"1", "2", "2_1", "3", "4"})
+    void resumingFromSerializedStateBehavesLikeInMemory(String scenario) {
+        switch (scenario) {
+            case "1" -> setScenario1();
+            case "2" -> setScenario2();
+            case "2_1" -> setScenario2_1();
+            case "3" -> setScenario3();
+            case "4" -> setScenario4();
+            default -> throw new IllegalArgumentException(scenario);
+        }
+        runJourneyDurably("parallel_test");
+        TestManager.myAssertEquals2(
+                writeToConsole,
+                simpleClassName + ".durable." + scenario,
+                "/workflow_service/test_parallel/test_scenario_" + scenario + "_expected.txt");
     }
 
     @Test

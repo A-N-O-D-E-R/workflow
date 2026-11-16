@@ -90,8 +90,12 @@ import lombok.extern.slf4j.Slf4j;
  * }</pre>
  *
  * <h2>Thread Safety</h2>
- * This class is thread-safe for operations on different case IDs. Operations on the same
- * case ID should be serialized externally to avoid race conditions.
+ * An instance carries the state of the case it is currently operating on (definition, workflow
+ * info, last pend). Its public operations are therefore {@code synchronized}: sharing one instance
+ * is safe but runs cases one at a time. To run cases concurrently, use one instance per concurrent
+ * operation &mdash; {@link com.anode.workflow.WorkflowService#getRunTimeService} creates a new,
+ * cheap instance on every call. Concurrent operations on the <em>same</em> case ID, from different
+ * instances, must still be serialized by the caller (for example with a database row lock).
  *
  * @see WorkflowDefinition
  * @see WorkflowContext
@@ -230,7 +234,7 @@ public class RuntimeService {
      *
      * @see #startCase(String, WorkflowDefinition, WorkflowVariables, List)
      */
-    public boolean isCaseStarted(String caseId) {
+    public synchronized boolean isCaseStarted(String caseId) {
         String key = WORKFLOW_INFO + SEP + caseId;
         Object d = dao.get(Object.class, key);
         if (d == null) {
@@ -313,7 +317,7 @@ public class RuntimeService {
      * @see WorkflowVariables
      * @see Milestone
      */
-    public WorkflowContext startCase(
+    public synchronized WorkflowContext startCase(
             String caseId,
             WorkflowDefinition journey,
             WorkflowVariables pvs,
@@ -333,6 +337,7 @@ public class RuntimeService {
             hasAlreadyStarted = true;
         }
 
+        journey.validate();
         // read the process definition and get process info
         workflowDefinition = journey;
         // read the process definition and get process info
@@ -459,7 +464,7 @@ public class RuntimeService {
      * @see #resumeCase(String, WorkflowVariables)
      * @see #startCase(String, WorkflowDefinition, WorkflowVariables, List)
      */
-    public WorkflowContext resumeCase(String caseId) {
+    public synchronized WorkflowContext resumeCase(String caseId) {
         return resumeCase(caseId, true, null);
     }
 
@@ -502,7 +507,7 @@ public class RuntimeService {
      * @see #resumeCase(String)
      * @see WorkflowVariables
      */
-    public WorkflowContext resumeCase(String caseId, WorkflowVariables pvs) {
+    public synchronized WorkflowContext resumeCase(String caseId, WorkflowVariables pvs) {
         return resumeCase(caseId, true, pvs);
     }
 
@@ -525,7 +530,7 @@ public class RuntimeService {
      *
      * @see #reopenCase(String, String, boolean, String, WorkflowVariables)
      */
-    public WorkflowContext reopenCase(
+    public synchronized WorkflowContext reopenCase(
             String caseId, String ticket, boolean pendBeforeResume, String pendWb) {
         return reopenCase(caseId, ticket, pendBeforeResume, pendWb, null);
     }
@@ -569,7 +574,7 @@ public class RuntimeService {
      *
      * @see #reopenCase(String, String, boolean, String)
      */
-    public WorkflowContext reopenCase(
+    public synchronized WorkflowContext reopenCase(
             String caseId,
             String ticket,
             boolean pendBeforeResume,

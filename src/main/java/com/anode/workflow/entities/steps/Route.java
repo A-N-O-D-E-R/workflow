@@ -29,6 +29,9 @@ public class Route extends Step {
     @Column(name = "next_step")
     private String next = null;
 
+    /** For JPA and JSON persistence only. */
+    protected Route() {}
+
     public Route(
             String name,
             String componentName,
@@ -46,6 +49,11 @@ public class Route extends Step {
         this.next = next;
         this.componentName = componentName;
         this.userData = userData;
+    }
+
+    /** Branches by name (read-only view, empty for dynamic routes). */
+    public Map<String, Branch> getBranches() {
+        return branches == null ? Map.of() : java.util.Collections.unmodifiableMap(branches);
     }
 
     public Branch getBranch(String name) {
